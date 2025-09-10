@@ -196,6 +196,8 @@ async function editItem(id) {
   try {
     const item = await apiFetch(`/api/items/${id}`);
 
+     editForm.querySelector('input[name="id"]').value = item.id;
+
     editForm.id.value = item.id;
     editForm.title.value = item.title;
     editForm.description.value = item.description;
@@ -216,12 +218,23 @@ async function editItem(id) {
 window.editItem = editItem;
 
 // ==========================
-// UPDATE ITEM
-// ==========================
 editForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const id = editForm.id.value;
+
+  // Get item ID from hidden input
+  const id = editForm.querySelector('input[name="id"]').value;
+
+  // Use FormData for PATCH request (supports file uploads)
   const formData = new FormData(editForm);
+
+  // If auction selected, ensure duration is provided
+  if (formData.get("is_auction") === "true") {
+    const duration = formData.get("auction_duration");
+    if (!duration) {
+      alert("Please select a valid auction duration.");
+      return;
+    }
+  }
 
   try {
     await apiFetch(`/api/items/${id}`, {
@@ -235,6 +248,7 @@ editForm?.addEventListener("submit", async (e) => {
     alert(`Failed to update listing: ${err.message}`);
   }
 });
+
 
 // ==========================
 // AUCTION DURATION TOGGLE
@@ -270,3 +284,4 @@ openProfileBtn.onclick = async () => {
 // INITIAL LOAD
 // ==========================
 loadListings();
+
