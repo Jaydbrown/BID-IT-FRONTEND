@@ -241,7 +241,7 @@ const closeProfileBtn = profileModal.querySelector('.close-btn');
 
 openProfileBtn.onclick = async () => {
   try {
-    const res = await fetch('http://localhost:5000/api/users/me', {
+    const res = await fetch('https://bid-it-backend.onrender.com/api/users/me', {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -260,4 +260,5 @@ openProfileBtn.onclick = async () => {
 };
 
 closeProfileBtn.onclick = () => profileModal.style.display = 'none';
+
 
