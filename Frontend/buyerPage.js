@@ -24,7 +24,7 @@ sidebar.addEventListener('click', e => {
   if (e.target === sidebar) closeSidebar();
 });
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'https://bid-it-backend.onrender.com';
 let allItems = [];
 
 function debounce(func, delay) {
@@ -245,3 +245,4 @@ function updateCountdowns() {
   await fetchAllItems();
   await loadAuctionAndFixedItems();
 });
+
