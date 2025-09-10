@@ -1,0 +1,351 @@
+body {
+  font-family: 'Playfair Display', serif;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+}
+
+#intro {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-color: #111;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    flex-direction: column;
+  }
+
+  #introText {
+    font-size: 40px;
+    border-right: 2px solid white;
+    white-space: nowrap;
+    overflow: hidden;
+    width: fit-content;
+    animation: blink-caret 0.7s step-end infinite;
+  }
+
+  @keyframes blink-caret {
+    0%, 100% { border-color: transparent; }
+    50% { border-color: white; }
+  }
+
+  /* Main content hidden initially */
+  #main-content {
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+
+  /* Show content after intro */
+  #main-content.visible {
+    opacity: 1;
+  }
+
+.container {
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-overlay {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(0,0,0,0.9);
+    overflow-x: hidden;
+    transition: 0.5s;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    padding-top: 60px;
+  }
+
+  /* Sidebar links */
+  .sidebar-overlay a {
+    padding: 15px 30px;
+    text-decoration: none;
+    font-size: 28px;
+    color: white;
+    display: block;
+    transition: 0.3s;
+    font-weight: bold;
+    font-size: 20px;
+  }
+  .sidebar-overlay a:hover {
+    background-color: #575757;
+  }
+
+  /* Close button */
+  .sidebar-overlay .closebtn {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    font-size: 36px;
+    color: white;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+
+  /* Hamburger icon container */
+  #hamburger {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    cursor: pointer;
+    width: 30px;
+    height: 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Hamburger bars */
+  .bar {
+    height: 4px;
+    width: 100%;
+    background-color: #333;
+    border-radius: 2px;
+    transition: 0.3s;
+  }
+
+  /* Optional: change hamburger color when sidebar is open */
+  .open #hamburger .bar {
+    background-color: white;
+  }
+
+.navbar {
+    background-color: white;
+    overflow: hidden;
+    position: fixed; /* stays at top on scroll */
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+    border-bottom: solid 1px grey; 
+  }
+  
+  /* Navbar list, horizontal layout */
+  .navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .navbar ul p {
+    display: flex;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-stretch: wider;
+  }
+  
+  /* Navbar list items */
+  .navbar ul li {
+    padding: 14px 20px;
+    align-items: center;
+  }
+  
+  /* Links inside navbar */
+  .navbar ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+  }
+  
+  /* Hover effect */
+  .navbar ul li a:hover {
+    background-color: #575757;
+    border-radius: 4px;
+  }
+  
+  /* Image in navbar (e.g., logo) */
+  .navbar ul li img {
+    height: 40px;
+    width: auto;
+    vertical-align: middle;
+  }
+  
+  /* Optional: Add spacing between logo and links */
+  .navbar ul li.logo {
+    margin-right: auto;
+  }
+  
+.body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* stick both sides to top */
+  padding: 40px 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: linear-gradient(
+    to bottom,
+    #ffffff 100%,
+    #f8f9fa 50%,
+    #e6f0ff 0%
+  );
+  gap: 150px; /* gap between left and right */
+}
+
+.bodyWriting {
+  flex: 1 1 40%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding-right: 20px;
+}
+
+.images {
+  flex: 1 1 50%;
+  display: flex;
+  justify-content: space-between; /* arrange precious1 - jide - precious */
+  align-items: flex-start; 
+  gap: 10px; /* small gaps between images */
+  max-width: 100%;
+  overflow: visible;
+  padding-left: 20px;
+}
+
+.images img {
+  width: 200px;
+  height: 300px;
+  object-fit: cover; /* better than contain for full images */
+  flex-shrink: 0;
+  display: block;
+}
+
+.precious1 { order: 1; z-index: 2; }
+.jide { order: 2; z-index: 3; }
+.precious { order: 3; z-index: 2; }
+
+@media (max-width: 768px) {
+  .body {
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    padding: 20px;
+    background: linear-gradient(
+    to bottom,
+    #ffffff 100%,
+    #f8f9fa 50%,
+    #e6f0ff 0%
+  );
+  }
+
+  .bodyWriting, .images {
+    flex: none;
+    width: 100%;
+    padding: 0;
+  }
+
+  .images {
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .images img {
+    width: 120px;
+  }
+}
+
+.bodyWriting {
+    margin-top: 80px;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    padding-right: 10px;
+}
+
+.display-part1 .display-part2 {
+    font-family: monospace, monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    border-right: 2px solid;
+    width: fit-content;
+    animation: blink-caret 0.7s step-end infinite;
+    font-size: 19px;
+    margin: 0;
+    font-weight: bolder;
+  }
+
+  @keyframes blink-caret {
+    0%, 100% { border-color: transparent; }
+    50% { border-color: black; }
+  }
+
+.navbar_image {
+    width: 10px;
+    height: 10px;
+}
+
+.site-footer {
+    background-color: #f8f9fa;
+    padding: 40px 20px 20px;
+    font-family: 'Arial', sans-serif;
+    color: #333;
+    border-top: 1px solid #ccc;
+  }
+  
+  .footer-content {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .footer-brand h3 {
+    margin: 0;
+    font-size: 24px;
+  }
+  
+  .footer-brand p {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .footer-links {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .footer-links a {
+    color: #333;
+    text-decoration: none;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+  
+  .footer-links a:hover {
+    color: #007BFF;
+  }
+  
+  .footer-social a img {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    transition: opacity 0.3s;
+  }
+  
+  .footer-social a img:hover {
+    opacity: 0.7;
+  }
+  
+  .footer-bottom {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+    color: #888;
+  }
+  

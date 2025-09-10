@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Up | BID IT</title>
+  <link rel="stylesheet" href="signup.css" />
+</head>
+<body>
+  <main class="signup-wrapper" role="main" aria-labelledby="signupTitle">
+    <h1 id="signupTitle">Create Your BID IT Account</h1>
+    <form id="signupForm" novalidate>
+      <div>
+        <label for="firstname">First Name</label>
+        <input
+          type="text"
+          id="firstname"
+          name="firstname"
+          minlength="2"
+          maxlength="30"
+          required
+          aria-describedby="firstnameHelp"
+          placeholder="Your first name"
+          autocomplete="given-name"
+        />
+        <small id="firstnameHelp">2-30 characters, letters only.</small>
+      </div>
+
+      <div>
+        <label for="surname">Surname</label>
+        <input
+          type="text"
+          id="surname"
+          name="surname"
+          minlength="2"
+          maxlength="30"
+          required
+          aria-describedby="surnameHelp"
+          placeholder="Your surname"
+          autocomplete="family-name"
+        />
+        <small id="surnameHelp">2-30 characters, letters only.</small>
+      </div>
+
+      <!-- New Email field added here -->
+      <div>
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          required
+          aria-describedby="emailHelp"
+          placeholder="Your email address"
+          autocomplete="email"
+        />
+        <small id="emailHelp">Please enter a valid email address.</small>
+      </div>
+
+      <div class="password-wrapper">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          minlength="8"
+          required
+          aria-describedby="passwordHelp"
+          placeholder="Create a secure password"
+          autocomplete="new-password"
+        />
+        <button
+          type="button"
+          class="toggle-password"
+          aria-label="Toggle password visibility"
+          aria-pressed="false"
+          tabindex="0"
+        >Show</button>
+        <small id="passwordHelp">At least 8 characters, including letters & numbers.</small>
+      </div>
+
+      <div class="password-wrapper">
+        <label for="confirmPassword">Confirm Password</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          name="confirmPassword"
+          minlength="8"
+          required
+          aria-describedby="confirmPasswordHelp"
+          placeholder="Re-enter your password"
+          autocomplete="new-password"
+        />
+        <button
+          type="button"
+          class="toggle-password confirm-toggle"
+          aria-label="Toggle confirm password visibility"
+          aria-pressed="false"
+          tabindex="0"
+        >Show</button>
+        <small id="confirmPasswordHelp">Must match the password entered above.</small>
+      </div>
+
+      <div>
+        <label for="institution">Institution / University</label>
+        <select id="institution" name="institution" required aria-describedby="institutionHelp">
+          <option value="" disabled selected>Select your institution</option>
+          <option value="uniben">University of Benin</option>
+          <option value="abuja">University of Abuja</option>
+          <option value="abu">Ahmadu Bello University, Zaria</option>
+          <option value="abubakar_tafawa_balewa">Abubakar Tafawa Balewa University, Bauchi</option>
+          <option value="bauchi_polytechnic">Federal University of Technology, Bauchi</option>
+          <option value="benue">Federal University of Agriculture, Makurdi</option>
+          <option value="calabar">University of Calabar</option>
+          <option value="federal_polytechnic_ondo">Federal University of Technology, Akure</option>
+          <!-- Add more universities as needed -->
+        </select>
+        <small id="institutionHelp">Please select your current institution.</small>
+      </div>
+
+      <button type="submit">Sign Up</button>
+    </form>
+
+    <div id="formMessage" role="alert" aria-live="polite" class="message"></div>
+    <p class="form-footer">
+        Already have an account?
+        <a href="login.html">Login here</a>
+    </p>
+      
+  </main>
+  <script src="signup.js"></script>
+</body>
+</html>

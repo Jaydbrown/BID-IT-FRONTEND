@@ -1,0 +1,150 @@
+:root {
+    --primary-color: #0056b3;
+    --primary-color-hover: #004494;
+    --error-color: #d93025;
+    --success-color: #188038;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --input-padding: 0.75rem 1rem;
+    --border-radius: 6px;
+  }
+  
+  body {
+    font-family: var(--font-family);
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  
+  .signup-wrapper {
+    background: #fff;
+    padding: 2rem 2.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    max-width: 420px;
+    width: 100%;
+  }
+  
+  h1 {
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    font-weight: 700;
+    text-align: center;
+  }
+  
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: #333;
+    display: block;
+  }
+  
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  select {
+    padding: var(--input-padding);
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    transition: border-color 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  input[type="text"]:focus,
+  input[type="password"]:focus,
+  input[type="email"]:focus,
+  select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px var(--primary-color);
+  }
+  
+  .password-wrapper {
+    position: relative;
+  }
+  
+  .toggle-password {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    user-select: none;
+  }
+  
+  button[type="submit"] {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.85rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 700;
+    transition: background-color 0.3s ease;
+  }
+  
+  button[type="submit"]:hover,
+  button[type="submit"]:focus {
+    background-color: var(--primary-color-hover);
+    outline: none;
+  }
+  
+  .message {
+    margin-top: 1rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  
+  .message.error {
+    color: var(--error-color);
+  }
+  
+  .message.success {
+    color: var(--success-color);
+  }
+  
+  small {
+    color: #666;
+    font-size: 0.85rem;
+  }
+  
+  @media (max-width: 480px) {
+    .signup-wrapper {
+      padding: 1.5rem 1.5rem;
+    }
+  }
+
+  .form-footer {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.95rem;
+    color: #555;
+  }
+  
+  .form-footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  
+  .form-footer a:hover {
+    text-decoration: underline;
+  }
+  
+  

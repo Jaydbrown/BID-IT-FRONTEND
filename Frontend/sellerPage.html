@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seller Dashboard | BID IT</title>
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
+  <link rel="stylesheet" href="sellerPage.css">
+  <style>
+    .amount-display {
+      font-weight: 600;
+      color: #007BFF;
+      font-size: 16px;
+    }
+    #openProfileModal {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      z-index: 2000;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 16px 20px;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    #openProfileModal:hover {
+      background-color: #0056b3;
+      transform: translateY(-3px);
+    }
+    #openProfileModal img {
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <ul>
+      <li class="left-Nav">
+        <div id="hamburger" aria-label="Open sidebar" role="button" tabindex="0">
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+        </div>
+
+        <!-- Sidebar -->
+        <div id="mySidebar" class="sidebar-overlay" aria-hidden="true">
+          <button class="closebtn" aria-label="Close sidebar">&times;</button>
+          <a href="FirstPage.html">HOME</a>
+          <a href="buyerPage.html">BUYER</a>
+          <a href="help.html">HELP</a>
+        </div>
+      </li>
+      <li><h3>BID IT Seller Dashboard</h3></li>
+      <li class="right-Nav">
+        <span class="amount-display">Balance: ₦50,000</span>
+      </li>
+    </ul>
+  </div>
+
+  <div class="container_seller-dashboard">
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h4>Active Listings</h4>
+        <p id="activeCount">0</p>
+      </div>
+      <div class="stat-card">
+        <h4>Items Sold</h4>
+        <p id="itemsSoldCount">0</p>
+      </div>
+      <div class="stat-card">
+        <h4>Total Earnings</h4>
+        <p id="balanceAmount">₦0</p>
+      </div>
+    </div>
+
+    <button id="openAddListingModal">+ Add New Listing</button>
+
+    <!-- Edit Listing Modal -->
+    <div id="editListingModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>Edit Listing</h2>
+        <form id="editListingForm" enctype="multipart/form-data">
+          <input type="hidden" name="id" />
+          <input type="text" name="title" placeholder="Item Title" required />
+          <div class="price-auction-container">
+            <input type="number" name="starting_price" placeholder="Price (₦)" required />
+            <select required>
+              <option value="" disabled selected>Choose Type</option>
+              <option value="true">Auction</option>
+              <option value="false">Not Auction</option>
+            </select>
+          </div>
+          <textarea name="description" placeholder="Item Description" required></textarea>
+          <select name="category" required>
+            <option value="" disabled selected>Select Category</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Fashion">Fashion</option>
+            <option value="Books">Books</option>
+            <option value="Furniture">Furniture</option>
+            <option value="Others">Others</option>
+          </select>
+          <input type="file" name="image" accept="image/*" />
+          <button type="submit">Save Changes</button>
+        </form>
+      </div>
+    </div>
+    <div class="auction-duration-container" style="display: none;">
+  <label for="auction_duration">Auction Duration:</label>
+  <select name="auction_duration" required>
+    <option value="" disabled selected>Select Duration</option>
+    <option value="2h">2 hours</option>
+    <option value="1d">1 day</option>
+    <option value="1.5d">1.5 days</option>
+  </select>
+</div>
+
+
+    <!-- Add Listing Modal -->
+    <div id="addListingModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>Add New Listing</h2>
+        <form id="addListingForm" enctype="multipart/form-data">
+          <input type="text" name="title" placeholder="Item Title" required />
+          <div class="price-auction-container">
+            <input type="number" name="starting_price" placeholder="Price (₦)" required />
+            <select name="is_auction" id="isAuctionSelect" required>
+              <option value="" disabled selected>Choose Type</option>
+              <option value="true">Auction</option>
+              <option value="false">Not Auction</option>
+            </select>
+          </div>
+          <div class="auction-duration-container" style="display: none;">
+  <label for="auction_duration">Auction Duration:</label>
+  <select name="auction_duration" required>
+    <option value="" disabled selected>Select Duration</option>
+    <option value="2h">2 hours</option>
+    <option value="1d">1 day</option>
+    <option value="1.5d">1.5 days</option>
+  </select>
+</div>
+
+
+          <!-- Auction duration selector: hidden by default -->
+          <div id="auctionDurationContainer" style="display: none; margin-top: 10px;">
+            <label for="auctionDuration">Auction Duration:</label>
+            <select name="auction_duration" id="auctionDuration">
+              <option value="" disabled selected>Select duration</option>
+              <option value="2h">2 Hours</option>
+              <option value="24h">1 Day</option>
+              <option value="36h">1.5 Days</option>
+            </select>
+          </div>
+
+          <textarea name="description" placeholder="Item Description" required></textarea>
+          <select name="category" required>
+            <option value="" disabled selected>Select Category</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Fashion">Fashion</option>
+            <option value="Books">Books</option>
+            <option value="Furniture">Furniture</option>
+            <option value="Others">Others</option>
+          </select>
+          <input type="file" name="image" accept="image/*" required />
+          <button type="submit">Add Listing</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>Your Profile</h2>
+        <p><strong>Username:</strong> <span id="profileUsername"></span></p>
+        <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+        <p><strong>Institution:</strong> <span id="profileInstitution"></span></p>
+        <p><strong>Member Since:</strong> <span id="profileCreatedAt"></span></p>
+      </div>
+    </div>
+
+    <button id="openProfileModal">
+      <img src="profile-icon.png" alt="Profile">
+      Profile
+    </button>
+
+    <!-- Listings Section -->
+    <div class="section">
+      <div class="section-header"><h2>Current Listings</h2></div>
+      <div class="section-body" id="listingContainer">
+        <!-- Listings will be dynamically loaded here -->
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <h3>BID IT</h3>
+        <p>Marketplace for Nigerian University Students</p>
+      </div>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="buyerPage.html">Buyer</a>
+        <a href="sellerPage.html">Seller</a>
+        <a href="help.html">Help</a>
+      </div>
+      <div class="footer-social">
+        <a href="#"><img src="facebook.png" alt="Facebook"></a>
+        <a href="#"><img src="x.svg" alt="X"></a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 BID IT. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const isAuctionSelect = document.getElementById('isAuctionSelect');
+      const auctionDurationContainer = document.getElementById('auctionDurationContainer');
+
+      isAuctionSelect.addEventListener('change', () => {
+        if (isAuctionSelect.value === 'true') {
+          auctionDurationContainer.style.display = 'block';
+        } else {
+          auctionDurationContainer.style.display = 'none';
+        }
+      });
+    });
+  </script>
+
+  <script src="sellerPage.js"></script>
+</body>
+</html>

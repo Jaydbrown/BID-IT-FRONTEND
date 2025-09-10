@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login | BID IT</title>
+  <link rel="stylesheet" href="login.css" />
+</head>
+<body>
+  <main class="login-wrapper" role="main" aria-labelledby="loginTitle">
+    <h1 id="loginTitle">Login to BID IT</h1>
+    <form id="loginForm" novalidate>
+      <div>
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          required
+          placeholder="Enter your email"
+          autocomplete="email"
+        />
+      </div>
+
+      <div class="password-wrapper">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          required
+          placeholder="Enter your password"
+          autocomplete="current-password"
+        />
+        <button
+          type="button"
+          class="toggle-password"
+          aria-label="Toggle password visibility"
+          aria-pressed="false"
+        >Show</button>
+      </div>
+
+      <button type="submit">Login</button>
+
+      <!-- Forgot password link -->
+      <p class="forgot-password">
+        <a href="#" id="forgotPasswordLink">Forgot your password?</a>
+      </p>
+
+      <div id="loginMessage" role="alert" aria-live="polite" class="message"></div>
+    </form>
+  </main>
+
+  <!-- Password Reset Modal -->
+  <div id="resetModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="resetModalTitle">
+    <div class="modal-content">
+      <span class="close-modal" role="button" aria-label="Close">&times;</span>
+      <h2 id="resetModalTitle">Reset Password</h2>
+      <form id="resetForm" novalidate>
+        <label for="resetEmail">Enter your email</label>
+        <input
+          type="email"
+          id="resetEmail"
+          name="resetEmail"
+          required
+          placeholder="Your email"
+        />
+        <button type="submit">Send Reset Link</button>
+        <div id="resetMessage" role="alert" aria-live="polite" class="message"></div>
+      </form>
+    </div>
+  </div>
+
+  <script src="login.js"></script>
+</body>
+</html>
