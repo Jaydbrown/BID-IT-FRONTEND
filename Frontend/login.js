@@ -53,7 +53,7 @@
       localStorage.setItem('token', data.token);
 
       setTimeout(() => {
-        window.location.href = '/Frontend/sellerPage.html';
+        window.location.href = 'sellerPage.html';
       }, 2000);
     } catch (error) {
       message.textContent = error.message;
@@ -135,4 +135,5 @@
     }
   });
 })();
+
 
