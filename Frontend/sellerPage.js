@@ -110,7 +110,7 @@ addForm.addEventListener('submit', async e => {
   }
 
   try {
-    const res = await fetch('http://localhost:5000/api/items', {
+    const res = await fetch('https://bid-it-backend.onrender.com/api/items', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: formData
@@ -138,7 +138,7 @@ addForm.addEventListener('submit', async e => {
 async function deleteItem(id) {
   if (!confirm('Are you sure you want to delete this item?')) return;
   try {
-    const res = await fetch(`http://localhost:5000/api/items/${id}`, {
+    const res = await fetch(`https://bid-it-backend.onrender.com/api/items/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -260,5 +260,6 @@ openProfileBtn.onclick = async () => {
 };
 
 closeProfileBtn.onclick = () => profileModal.style.display = 'none';
+
 
 
