@@ -51,7 +51,7 @@ window.onclick = e => {
 async function loadListings() {
   listingContainer.innerHTML = '';
   try {
-    const res = await fetch('http://localhost:5000/api/items/my', {
+    const res = await fetch('https://bid-it-backend.onrender.com/api/items/my', {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
@@ -64,7 +64,7 @@ async function loadListings() {
       card.className = 'listing-card';
       card.innerHTML = `
         <div class="listing-image">
-          <img src="${item.image_url ? `http://localhost:5000${item.image_url}` : 'https://via.placeholder.com/100'}" alt="${item.title}">
+          <img src="${item.image_url ? `https://bid-it-backend.onrender.com${item.image_url}` : 'https://via.placeholder.com/100'}" alt="${item.title}">
         </div>
         <div class="listing-info">
           <h4>${item.title}</h4>
@@ -153,7 +153,7 @@ async function deleteItem(id) {
 // Edit item
 async function editItem(id) {
   try {
-    const res = await fetch(`http://localhost:5000/api/items/${id}`, {
+    const res = await fetch(`https://bid-it-backend.onrender.com/api/items/${id}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (!res.ok) throw new Error('Failed to fetch item');
@@ -200,7 +200,7 @@ editForm?.addEventListener('submit', async e => {
   }
 
   try {
-    const res = await fetch(`http://localhost:5000/api/items/${id}`, {
+    const res = await fetch(`https://bid-it-backend.onrender.com/api/items/${id}`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${token}` },
       body: formData
@@ -260,3 +260,4 @@ openProfileBtn.onclick = async () => {
 };
 
 closeProfileBtn.onclick = () => profileModal.style.display = 'none';
+
