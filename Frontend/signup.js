@@ -58,7 +58,7 @@ form.addEventListener('submit', async (event) => {
 
   try {
     // Send signup data to your backend API
-    const response = await fetch('http://localhost:5000/api/auth/signup', {  // Adjust URL to your backend route
+    const response = await fetch('https://bid-it-backend.onrender.com/api/auth/signup', {  // Adjust URL to your backend route
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -114,3 +114,4 @@ form.addEventListener('submit', async (event) => {
     form.querySelector('button[type="submit"]').disabled = false;
   }
 });
+
