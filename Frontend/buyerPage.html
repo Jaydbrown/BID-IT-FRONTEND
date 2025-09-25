@@ -1318,6 +1318,21 @@
       height: 100vh; /* or 50% of the parent container */
       object-fit: cover;
     }
+
+    /* On small screens, hide hamburger + right side */
+@media (max-width: 768px) {
+  #hamburger,
+  .right-Nav {
+    display: none;
+  }
+
+  .navbar-brand {
+    margin-left: 10px; /* keep some spacing from edge */
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+}
+
     
   </style>
 </head>
@@ -1333,6 +1348,8 @@
             <div class="bar"></div>
           </div>
 
+          <div class="navbar-brand">BID IT</div>
+
           <!-- Sidebar (kept) -->
           <div id="mySidebar" class="sidebar-overlay" aria-hidden="true">
             <button class="closebtn" aria-label="Close sidebar">&times;</button>
@@ -1342,8 +1359,6 @@
           </div>
 
         </div>
-
-        <div class="navbar-brand">BID IT</div>
 
         <div class="right-Nav">
           <div class="dropdown">
@@ -1635,3 +1650,4 @@
 </body>
 
 </html>
+
