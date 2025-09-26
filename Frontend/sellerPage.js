@@ -1,4 +1,15 @@
 // ==========================
+// BYPASS PROVIDER.JS INTERFERENCE
+// ==========================
+// Store the original fetch before any extensions can override it
+const originalFetch = window.fetch;
+
+// Create a clean fetch function that bypasses provider.js
+function cleanFetch(url, options) {
+  return originalFetch.call(window, url, options);
+}
+
+// ==========================
 // GLOBAL CONSTANTS
 // ==========================
 const API_BASE_URL = "https://bid-it-backend.onrender.com";
@@ -71,37 +82,34 @@ if (!token) {
   window.location.href = "/frontend/login.html";
 }
 
-// Replace your apiFetch function with this version
+// ==========================
+// UPDATED apiFetch FUNCTION
+// ==========================
 async function apiFetch(url, options = {}) {
   try {
     const headers = { Authorization: `Bearer ${token}`, ...(options.headers || {}) };
     let body = options.body;
 
-    // Handle FormData specially to avoid cloning issues
+    // Handle FormData specially
     if (body instanceof FormData) {
-      // Don't set Content-Type for FormData - let browser set it with boundary
-      // Don't try to serialize FormData
+      // Don't set Content-Type for FormData - let browser handle it
     } else if (body) {
-      // Only for non-FormData bodies
       headers["Content-Type"] = "application/json";
       body = JSON.stringify(body);
     }
 
-    // Create a clean options object to avoid any cloning issues
     const fetchOptions = {
       method: options.method || 'GET',
       headers,
       body,
-      // Don't spread the original options to avoid including problematic properties
     };
 
     console.log('Making request to:', `${API_BASE_URL}${url}`);
-    console.log('Request options:', {
-      ...fetchOptions,
-      body: fetchOptions.body instanceof FormData ? '[FormData object]' : fetchOptions.body
-    });
+    console.log('Request method:', fetchOptions.method);
+    console.log('Request headers:', fetchOptions.headers);
 
-    const res = await fetch(`${API_BASE_URL}${url}`, fetchOptions);
+    // Use cleanFetch instead of window.fetch to bypass provider.js
+    const res = await cleanFetch(`${API_BASE_URL}${url}`, fetchOptions);
 
     console.log('Response status:', res.status);
     console.log('Response ok:', res.ok);
@@ -122,7 +130,6 @@ async function apiFetch(url, options = {}) {
     
   } catch (err) {
     console.error(`API Error [${url}]:`, err);
-    console.error('Full error object:', err);
     throw err;
   }
 }
@@ -131,9 +138,12 @@ async function apiFetch(url, options = {}) {
 // LOAD LISTINGS
 // ==========================
 async function loadListings() {
+  console.log('Loading listings...');
   listingContainer.innerHTML = "";
+  
   try {
     const items = await apiFetch("/api/items/my");
+    console.log('Loaded items:', items);
 
     activeCountEl.textContent = items.length;
 
@@ -161,6 +171,7 @@ async function loadListings() {
       listingContainer.appendChild(card);
     });
   } catch (err) {
+    console.error('Failed to load listings:', err);
     alert("Failed to load your listings. Please try again later.");
   }
 }
@@ -170,7 +181,16 @@ async function loadListings() {
 // ==========================
 addForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+  
+  console.log('Add form submitted');
+  
   const formData = new FormData(addForm);
+  
+  // Log form data for debugging
+  console.log('Form data entries:');
+  for (let [key, value] of formData.entries()) {
+    console.log(`${key}:`, value);
+  }
 
   if (!formData.get("title") || !formData.get("description") || !formData.get("starting_price") || !formData.get("category")) {
     alert("Please fill all required fields.");
@@ -193,15 +213,20 @@ addForm.addEventListener("submit", async (e) => {
   }
 
   try {
+    console.log('About to submit form...');
+    
+    // Make sure the URL doesn't have trailing slash
     await apiFetch("/api/items", {
       method: "POST",
       body: formData,
     });
 
+    console.log('Form submitted successfully');
     addForm.reset();
     addModal.style.display = "none";
     await loadListings();
   } catch (err) {
+    console.error('Form submission error:', err);
     alert(`Failed to add listing: ${err.message}`);
   }
 });
@@ -227,7 +252,7 @@ async function editItem(id) {
   try {
     const item = await apiFetch(`/api/items/${id}`);
 
-     editForm.querySelector('input[name="id"]').value = item.id;
+    editForm.querySelector('input[name="id"]').value = item.id;
 
     editForm.id.value = item.id;
     editForm.title.value = item.title;
@@ -248,6 +273,8 @@ async function editItem(id) {
 }
 window.editItem = editItem;
 
+// ==========================
+// EDIT FORM SUBMISSION
 // ==========================
 editForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -280,21 +307,19 @@ editForm?.addEventListener("submit", async (e) => {
   }
 });
 
+// ==========================
+// AUCTION DURATION TOGGLE
+// ==========================
+document.querySelectorAll('select[name="is_auction"]').forEach((select) => {
+  select.addEventListener("change", () => toggleAuctionDurationVisibility(select, select.closest("form")));
+});
+
 document.querySelectorAll('#editListingForm select[name="is_auction"]').forEach((select) => {
   select.addEventListener('change', () => {
     const form = select.closest('form');
     const container = form.querySelector('.auction-duration-container');
     container.style.display = select.value === 'true' ? 'block' : 'none';
   });
-});
-
-
-
-// ==========================
-// AUCTION DURATION TOGGLE
-// ==========================
-document.querySelectorAll('select[name="is_auction"]').forEach((select) => {
-  select.addEventListener("change", () => toggleAuctionDurationVisibility(select, select.closest("form")));
 });
 
 function toggleAuctionDurationVisibility(select, form) {
@@ -321,10 +346,40 @@ openProfileBtn.onclick = async () => {
 };
 
 // ==========================
+// TEST ENDPOINTS FUNCTION
+// ==========================
+async function testEndpoints() {
+  console.log('Testing endpoints...');
+  
+  // Test basic connectivity
+  try {
+    const response = await cleanFetch('https://bid-it-backend.onrender.com/api/items');
+    console.log('Basic endpoint test - Status:', response.status);
+  } catch (error) {
+    console.error('Basic endpoint test failed:', error);
+  }
+  
+  // Test authenticated endpoint
+  try {
+    const response = await cleanFetch('https://bid-it-backend.onrender.com/api/items/my', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    console.log('Auth endpoint test - Status:', response.status);
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Auth endpoint data:', data);
+    }
+  } catch (error) {
+    console.error('Auth endpoint test failed:', error);
+  }
+}
+
+// ==========================
 // INITIAL LOAD
 // ==========================
+console.log('sellerPage.js loaded');
+testEndpoints();
 loadListings();
-
-
-
-
