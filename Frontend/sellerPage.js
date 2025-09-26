@@ -256,6 +256,15 @@ editForm?.addEventListener("submit", async (e) => {
   }
 });
 
+document.querySelectorAll('#editListingForm select[name="is_auction"]').forEach((select) => {
+  select.addEventListener('change', () => {
+    const form = select.closest('form');
+    const container = form.querySelector('.auction-duration-container');
+    container.style.display = select.value === 'true' ? 'block' : 'none';
+  });
+});
+
+
 
 // ==========================
 // AUCTION DURATION TOGGLE
@@ -291,5 +300,6 @@ openProfileBtn.onclick = async () => {
 // INITIAL LOAD
 // ==========================
 loadListings();
+
 
 
