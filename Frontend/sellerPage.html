@@ -86,35 +86,54 @@
     <button id="openAddListingModal">+ Add New Listing</button>
 
     <!-- Edit Listing Modal -->
-    <div id="editListingModal" class="modal">
-      <div class="modal-content">
-        <span class="close-btn">&times;</span>
-        <h2>Edit Listing</h2>
-        <form id="editListingForm" enctype="multipart/form-data">
-          <input type="hidden" name="id" />
-          <input type="text" name="title" placeholder="Item Title" required />
-          <div class="price-auction-container">
-            <input type="number" name="starting_price" placeholder="Price (₦)" required />
-            <select required>
-              <option value="" disabled selected>Choose Type</option>
-              <option value="true">Auction</option>
-              <option value="false">Not Auction</option>
-            </select>
-          </div>
-          <textarea name="description" placeholder="Item Description" required></textarea>
-          <select name="category" required>
-            <option value="" disabled selected>Select Category</option>
-            <option value="Electronics">Electronics</option>
-            <option value="Fashion">Fashion</option>
-            <option value="Books">Books</option>
-            <option value="Furniture">Furniture</option>
-            <option value="Others">Others</option>
-          </select>
-          <input type="file" name="image" accept="image/*" />
-          <button type="submit">Save Changes</button>
-        </form>
+    <!-- Edit Listing Modal -->
+<div id="editListingModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn">&times;</span>
+    <h2>Edit Listing</h2>
+    <form id="editListingForm" enctype="multipart/form-data">
+      <input type="hidden" name="id" />
+
+      <input type="text" name="title" placeholder="Item Title" required />
+
+      <div class="price-auction-container">
+        <input type="number" name="starting_price" placeholder="Price (₦)" required />
+        <select name="is_auction" required>
+          <option value="" disabled selected>Choose Type</option>
+          <option value="true">Auction</option>
+          <option value="false">Not Auction</option>
+        </select>
       </div>
-    </div>
+
+      <div class="auction-duration-container" style="display: none;" id="editAuctionDurationContainer">
+        <label for="auction_duration">Auction Duration:</label>
+        <select name="auction_duration">
+          <option value="" disabled selected>Select Duration</option>
+          <option value="2h">2 hours</option>
+          <option value="1d">1 day</option>
+          <option value="1.5d">1.5 days</option>
+        </select>
+      </div>
+
+      <textarea name="description" placeholder="Item Description" required></textarea>
+
+      <select name="category" required>
+        <option value="" disabled selected>Select Category</option>
+        <option value="Electronics">Electronics</option>
+        <option value="Fashion">Fashion</option>
+        <option value="Books">Books</option>
+        <option value="Furniture">Furniture</option>
+        <option value="Others">Others</option>
+      </select>
+
+      <input type="file" name="image" accept="image/*" />
+
+      <button type="submit">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+
     <div class="auction-duration-container" style="display: none;">
   <label for="auction_duration">Auction Duration:</label>
   <select name="auction_duration" required>
@@ -234,5 +253,6 @@
   <script src="sellerPage.js"></script>
 </body>
 </html>
+
 
 
