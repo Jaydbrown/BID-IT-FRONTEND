@@ -71,34 +71,58 @@ if (!token) {
   window.location.href = "/frontend/login.html";
 }
 
-// ==========================
-// FETCH HELPERS
-// ==========================
+// Replace your apiFetch function with this version
 async function apiFetch(url, options = {}) {
   try {
     const headers = { Authorization: `Bearer ${token}`, ...(options.headers || {}) };
     let body = options.body;
 
-    // If not FormData, assume JSON
-    if (body && !(body instanceof FormData)) {
+    // Handle FormData specially to avoid cloning issues
+    if (body instanceof FormData) {
+      // Don't set Content-Type for FormData - let browser set it with boundary
+      // Don't try to serialize FormData
+    } else if (body) {
+      // Only for non-FormData bodies
       headers["Content-Type"] = "application/json";
       body = JSON.stringify(body);
     }
 
-    const res = await fetch(`${API_BASE_URL}${url}`, {
-      ...options,
+    // Create a clean options object to avoid any cloning issues
+    const fetchOptions = {
+      method: options.method || 'GET',
       headers,
       body,
+      // Don't spread the original options to avoid including problematic properties
+    };
+
+    console.log('Making request to:', `${API_BASE_URL}${url}`);
+    console.log('Request options:', {
+      ...fetchOptions,
+      body: fetchOptions.body instanceof FormData ? '[FormData object]' : fetchOptions.body
     });
 
+    const res = await fetch(`${API_BASE_URL}${url}`, fetchOptions);
+
+    console.log('Response status:', res.status);
+    console.log('Response ok:', res.ok);
+
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP ${res.status}`);
+      let errorData = {};
+      try {
+        errorData = await res.json();
+      } catch (e) {
+        console.log('Could not parse error response as JSON');
+      }
+      throw new Error(errorData.message || `HTTP ${res.status}: ${res.statusText}`);
     }
 
-    return res.json();
+    const responseData = await res.json();
+    console.log('Response data:', responseData);
+    return responseData;
+    
   } catch (err) {
     console.error(`API Error [${url}]:`, err);
+    console.error('Full error object:', err);
     throw err;
   }
 }
@@ -300,6 +324,7 @@ openProfileBtn.onclick = async () => {
 // INITIAL LOAD
 // ==========================
 loadListings();
+
 
 
 
