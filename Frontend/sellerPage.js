@@ -76,12 +76,19 @@ if (!token) {
 // ==========================
 async function apiFetch(url, options = {}) {
   try {
+    const headers = { Authorization: `Bearer ${token}`, ...(options.headers || {}) };
+    let body = options.body;
+
+    // If not FormData, assume JSON
+    if (body && !(body instanceof FormData)) {
+      headers["Content-Type"] = "application/json";
+      body = JSON.stringify(body);
+    }
+
     const res = await fetch(`${API_BASE_URL}${url}`, {
       ...options,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...(options.headers || {}),
-      },
+      headers,
+      body,
     });
 
     if (!res.ok) {
@@ -284,4 +291,5 @@ openProfileBtn.onclick = async () => {
 // INITIAL LOAD
 // ==========================
 loadListings();
+
 
