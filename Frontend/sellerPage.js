@@ -252,9 +252,9 @@ async function editItem(id) {
   try {
     const item = await apiFetch(`/api/items/${id}`);
 
-    editForm.querySelector('input[name="id"]').value = item.id;
+    // Store ID in form's dataset
+    editForm.dataset.itemId = id;
 
-    editForm.id.value = item.id;
     editForm.title.value = item.title;
     editForm.description.value = item.description;
     editForm.starting_price.value = item.starting_price;
@@ -271,20 +271,16 @@ async function editItem(id) {
     alert("Failed to load item for editing.");
   }
 }
-window.editItem = editItem;
-
 // ==========================
 // EDIT FORM SUBMISSION
 // ==========================
 editForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const id = editForm.querySelector('input[name="id"]').value;
+  // Get item ID from the form's data attribute (set during editItem())
+  const id = editForm.dataset.itemId;
   
-  if (!id) {
-    alert("Item ID is missing. Please try again.");
-    return;
-  }
+  console.log('Editing item ID:', id); // Debug log
 
   const formData = new FormData(editForm);
   
@@ -388,4 +384,5 @@ async function testEndpoints() {
 console.log('sellerPage.js loaded');
 testEndpoints();
 loadListings();
+
 
