@@ -248,12 +248,19 @@ window.deleteItem = deleteItem;
 // ==========================
 // EDIT ITEM
 // ==========================
+// ==========================
+// EDIT ITEM
+// ==========================
 async function editItem(id) {
+  console.log('editItem called with id:', id); // DEBUG
+  
   try {
     const item = await apiFetch(`/api/items/${id}`);
+    console.log('Loaded item:', item); // DEBUG
 
     // Store ID in form's dataset
     editForm.dataset.itemId = id;
+    console.log('Set editForm.dataset.itemId to:', editForm.dataset.itemId); // DEBUG
 
     editForm.title.value = item.title;
     editForm.description.value = item.description;
@@ -268,19 +275,26 @@ async function editItem(id) {
 
     editModal.style.display = "flex";
   } catch (err) {
+    console.error('Error in editItem:', err);
     alert("Failed to load item for editing.");
   }
 }
+window.editItem = editItem; // ADD THIS LINE - it was missing!
+
 // ==========================
 // EDIT FORM SUBMISSION
 // ==========================
 editForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // Get item ID from the form's data attribute (set during editItem())
+  console.log('Edit form submitted'); // DEBUG
   const id = editForm.dataset.itemId;
-  
-  console.log('Editing item ID:', id); // Debug log
+  console.log('Editing item ID:', id); // DEBUG
+
+  if (!id) {
+    alert("Item ID is missing. Please try again.");
+    return;
+  }
 
   const formData = new FormData(editForm);
   
@@ -296,11 +310,14 @@ editForm?.addEventListener("submit", async (e) => {
   }
 
   try {
+    console.log(`Sending PATCH to /api/items/${id}`); // DEBUG
+    
     await apiFetch(`/api/items/${id}`, {
       method: "PATCH",
       body: formData,
     });
 
+    console.log('Update successful'); // DEBUG
     editModal.style.display = "none";
     await loadListings();
   } catch (err) {
@@ -384,5 +401,6 @@ async function testEndpoints() {
 console.log('sellerPage.js loaded');
 testEndpoints();
 loadListings();
+
 
 
