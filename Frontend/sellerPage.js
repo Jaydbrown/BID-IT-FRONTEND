@@ -279,13 +279,18 @@ window.editItem = editItem;
 editForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // Get item ID from hidden input
   const id = editForm.querySelector('input[name="id"]').value;
+  
+  if (!id) {
+    alert("Item ID is missing. Please try again.");
+    return;
+  }
 
-  // Use FormData for PATCH request (supports file uploads)
   const formData = new FormData(editForm);
+  
+  // Remove the id field - it should only be in the URL
+  formData.delete("id");
 
-  // If auction selected, ensure duration is provided
   if (formData.get("is_auction") === "true") {
     const duration = formData.get("auction_duration");
     if (!duration) {
@@ -303,10 +308,10 @@ editForm?.addEventListener("submit", async (e) => {
     editModal.style.display = "none";
     await loadListings();
   } catch (err) {
+    console.error('Edit form error:', err);
     alert(`Failed to update listing: ${err.message}`);
   }
 });
-
 // ==========================
 // AUCTION DURATION TOGGLE
 // ==========================
@@ -383,3 +388,4 @@ async function testEndpoints() {
 console.log('sellerPage.js loaded');
 testEndpoints();
 loadListings();
+
