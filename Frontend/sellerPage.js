@@ -251,15 +251,68 @@ window.deleteItem = deleteItem;
 // ==========================
 // EDIT ITEM
 // ==========================
+// ==========================
+// LOAD LISTINGS
+// ==========================
+async function loadListings() {
+  console.log('Loading listings...');
+  listingContainer.innerHTML = "";
+  
+  try {
+    const items = await apiFetch("/api/items/my");
+    console.log('Loaded items:', items);
+
+    activeCountEl.textContent = items.length;
+
+    if (items.length === 0) {
+      listingContainer.innerHTML = `<p class="no-listings">No active listings yet.</p>`;
+      return;
+    }
+
+    items.forEach((item) => {
+      const card = document.createElement("div");
+      card.className = "listing-card";
+      card.innerHTML = `
+        <div class="listing-image">
+          <img src="${item.image_url ? `${API_BASE_URL}${item.image_url}` : "https://via.placeholder.com/100"}" alt="${item.title}">
+        </div>
+        <div class="listing-info">
+          <h4>${item.title}</h4>
+          <p>₦${item.starting_price.toLocaleString()}</p>
+        </div>
+        <div class="listing-actions">
+          <button class="edit" data-id="${item.id}">Edit</button>
+          <button class="delete" data-id="${item.id}">Delete</button>
+        </div>
+      `;
+      
+      // Add event listeners instead of onclick attributes
+      const editBtn = card.querySelector('.edit');
+      const deleteBtn = card.querySelector('.delete');
+      
+      editBtn.addEventListener('click', () => editItem(item.id));
+      deleteBtn.addEventListener('click', () => deleteItem(item.id));
+      
+      listingContainer.appendChild(card);
+    });
+  } catch (err) {
+    console.error('Failed to load listings:', err);
+    alert("Failed to load your listings. Please try again later.");
+  }
+}
+
+// ==========================
+// EDIT ITEM
+// ==========================
 async function editItem(id) {
-  console.log('editItem called with id:', id); // DEBUG
+  console.log('editItem called with id:', id, 'Type:', typeof id); // DEBUG
   
   try {
     const item = await apiFetch(`/api/items/${id}`);
     console.log('Loaded item:', item); // DEBUG
 
-    // Store ID in form's dataset
-    editForm.dataset.itemId = id;
+    // Store ID in form's dataset as string (will be used in URL)
+    editForm.dataset.itemId = String(id);
     console.log('Set editForm.dataset.itemId to:', editForm.dataset.itemId); // DEBUG
 
     editForm.title.value = item.title;
@@ -279,7 +332,19 @@ async function editItem(id) {
     alert("Failed to load item for editing.");
   }
 }
-window.editItem = editItem; // ADD THIS LINE - it was missing!
+
+// ==========================
+// DELETE ITEM
+// ==========================
+async function deleteItem(id) {
+  if (!confirm("Are you sure you want to delete this item?")) return;
+  try {
+    await apiFetch(`/api/items/${id}`, { method: "DELETE" });
+    await loadListings();
+  } catch (err) {
+    alert("Failed to delete listing.");
+  }
+}
 
 // ==========================
 // EDIT FORM SUBMISSION
@@ -288,21 +353,18 @@ editForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const id = editForm.dataset.itemId;
-  console.log("Editing item ID:", id);
+  console.log('Submitting edit for ID:', id, 'Type:', typeof id); // DEBUG
 
   if (!id) {
-    alert("Item ID is missing. Cannot update.");
-    return;
-  }
-
-  // Optional: if backend uses MongoDB ObjectId
-  if (!/^[0-9a-fA-F]{24}$/.test(id)) {
-    alert("Item ID is invalid format.");
+    alert("Item ID is missing. Please try again.");
     return;
   }
 
   const formData = new FormData(editForm);
-  formData.delete("id"); // ID should only be in URL
+  formData.delete("id"); // Remove ID from body
+
+  const imageFile = formData.get("image");
+  const hasNewImage = imageFile && imageFile instanceof File && imageFile.size > 0;
 
   if (formData.get("is_auction") === "true") {
     const duration = formData.get("auction_duration");
@@ -312,18 +374,28 @@ editForm?.addEventListener("submit", async (e) => {
     }
   }
 
+  // If no new image, remove the empty file field
+  if (!hasNewImage) {
+    formData.delete("image");
+  }
+
   try {
     console.log(`Sending PATCH to /api/items/${id}`);
+    console.log('FormData contents:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`  ${key}:`, value);
+    }
+    
     await apiFetch(`/api/items/${id}`, {
       method: "PATCH",
       body: formData,
     });
 
-    console.log("Update successful");
+    console.log('Update successful');
     editModal.style.display = "none";
     await loadListings();
   } catch (err) {
-    console.error("Edit form error:", err);
+    console.error('Edit form error:', err);
     alert(`Failed to update listing: ${err.message}`);
   }
 });
@@ -403,6 +475,7 @@ async function testEndpoints() {
 console.log('sellerPage.js loaded');
 testEndpoints();
 loadListings();
+
 
 
 
