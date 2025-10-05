@@ -305,15 +305,18 @@ async function loadListings() {
 // EDIT ITEM
 // ==========================
 async function editItem(id) {
-  console.log('editItem called with id:', id, 'Type:', typeof id); // DEBUG
+  console.log('=== EDIT ITEM CALLED ===');
+  console.log('Raw ID:', id);
+  console.log('ID Type:', typeof id);
+  console.log('ID value:', JSON.stringify(id));
   
   try {
     const item = await apiFetch(`/api/items/${id}`);
-    console.log('Loaded item:', item); // DEBUG
+    console.log('Successfully loaded item:', item);
 
-    // Store ID in form's dataset as string (will be used in URL)
+    // Store ID in form's dataset
     editForm.dataset.itemId = String(id);
-    console.log('Set editForm.dataset.itemId to:', editForm.dataset.itemId); // DEBUG
+    console.log('Stored in dataset:', editForm.dataset.itemId);
 
     editForm.title.value = item.title;
     editForm.description.value = item.description;
@@ -334,26 +337,18 @@ async function editItem(id) {
 }
 
 // ==========================
-// DELETE ITEM
-// ==========================
-async function deleteItem(id) {
-  if (!confirm("Are you sure you want to delete this item?")) return;
-  try {
-    await apiFetch(`/api/items/${id}`, { method: "DELETE" });
-    await loadListings();
-  } catch (err) {
-    alert("Failed to delete listing.");
-  }
-}
-
-// ==========================
 // EDIT FORM SUBMISSION
 // ==========================
 editForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  console.log('=== FORM SUBMIT CALLED ===');
+  console.log('editForm.dataset:', editForm.dataset);
+  
   const id = editForm.dataset.itemId;
-  console.log('Submitting edit for ID:', id, 'Type:', typeof id); // DEBUG
+  console.log('Retrieved ID:', id);
+  console.log('ID Type:', typeof id);
+  console.log('ID value:', JSON.stringify(id));
 
   if (!id) {
     alert("Item ID is missing. Please try again.");
@@ -361,10 +356,22 @@ editForm?.addEventListener("submit", async (e) => {
   }
 
   const formData = new FormData(editForm);
-  formData.delete("id"); // Remove ID from body
+  
+  console.log('=== FORMDATA BEFORE DELETE ===');
+  for (let [key, value] of formData.entries()) {
+    console.log(`${key}:`, value);
+  }
+  
+  formData.delete("id");
+  
+  console.log('=== FORMDATA AFTER DELETE ===');
+  for (let [key, value] of formData.entries()) {
+    console.log(`${key}:`, value);
+  }
 
   const imageFile = formData.get("image");
   const hasNewImage = imageFile && imageFile instanceof File && imageFile.size > 0;
+  console.log('Has new image:', hasNewImage);
 
   if (formData.get("is_auction") === "true") {
     const duration = formData.get("auction_duration");
@@ -374,28 +381,33 @@ editForm?.addEventListener("submit", async (e) => {
     }
   }
 
-  // If no new image, remove the empty file field
   if (!hasNewImage) {
     formData.delete("image");
+    console.log('Deleted empty image field');
   }
 
   try {
-    console.log(`Sending PATCH to /api/items/${id}`);
-    console.log('FormData contents:');
-    for (let [key, value] of formData.entries()) {
-      console.log(`  ${key}:`, value);
-    }
+    const url = `/api/items/${id}`;
+    console.log('=== MAKING REQUEST ===');
+    console.log('URL:', url);
+    console.log('Full URL:', `${API_BASE_URL}${url}`);
+    console.log('Method: PATCH');
     
-    await apiFetch(`/api/items/${id}`, {
+    const result = await apiFetch(url, {
       method: "PATCH",
       body: formData,
     });
 
-    console.log('Update successful');
+    console.log('=== SUCCESS ===');
+    console.log('Result:', result);
+    
     editModal.style.display = "none";
     await loadListings();
   } catch (err) {
-    console.error('Edit form error:', err);
+    console.error('=== ERROR ===');
+    console.error('Error object:', err);
+    console.error('Error message:', err.message);
+    console.error('Error stack:', err.stack);
     alert(`Failed to update listing: ${err.message}`);
   }
 });
@@ -475,6 +487,7 @@ async function testEndpoints() {
 console.log('sellerPage.js loaded');
 testEndpoints();
 loadListings();
+
 
 
 
