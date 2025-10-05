@@ -1,10 +1,47 @@
 // ==========================
 // BYPASS PROVIDER.JS INTERFERENCE
 // ==========================
+// Store the original fetch and XMLHttpRequest before any extensions can override them
 const originalFetch = window.fetch;
+const originalXHR = window.XMLHttpRequest;
 
-function cleanFetch(url, options) {
-  return originalFetch.call(window, url, options);
+// Create a completely clean fetch function
+function cleanFetch(url, options = {}) {
+  // Use XMLHttpRequest instead of fetch to completely bypass provider.js
+  return new Promise((resolve, reject) => {
+    const xhr = new originalXHR();
+    const method = options.method || 'GET';
+    
+    xhr.open(method, url, true);
+    
+    // Set headers
+    if (options.headers) {
+      Object.keys(options.headers).forEach(key => {
+        xhr.setRequestHeader(key, options.headers[key]);
+      });
+    }
+    
+    xhr.onload = () => {
+      const response = {
+        ok: xhr.status >= 200 && xhr.status < 300,
+        status: xhr.status,
+        statusText: xhr.statusText,
+        json: () => Promise.resolve(JSON.parse(xhr.responseText)),
+        text: () => Promise.resolve(xhr.responseText)
+      };
+      resolve(response);
+    };
+    
+    xhr.onerror = () => reject(new Error('Network error'));
+    xhr.ontimeout = () => reject(new Error('Request timeout'));
+    
+    // Send body
+    if (options.body) {
+      xhr.send(options.body);
+    } else {
+      xhr.send();
+    }
+  });
 }
 
 // ==========================
@@ -188,6 +225,7 @@ addForm.addEventListener("submit", async (e) => {
   
   const formData = new FormData(addForm);
   
+  // Log form data for debugging
   console.log('Form data entries:');
   for (let [key, value] of formData.entries()) {
     console.log(`${key}:`, value);
@@ -205,16 +243,32 @@ addForm.addEventListener("submit", async (e) => {
   }
 
   if (isAuctionValue === "true") {
-    const selectedDuration = addForm.querySelector('[name="auction_duration"]')?.value;
+    const durationSelect = addForm.querySelector('select[name="auction_duration"]');
+    const selectedDuration = durationSelect?.value;
+    
+    console.log('Duration select element:', durationSelect);
+    console.log('Selected duration value:', selectedDuration);
+    
     if (!selectedDuration) {
       alert("Please select auction duration.");
       return;
     }
-    formData.append("auction_duration", selectedDuration);
+    
+    // Make sure it's in the FormData
+    if (!formData.has('auction_duration')) {
+      formData.append("auction_duration", selectedDuration);
+    }
+  } else {
+    // Remove auction_duration if it exists and not an auction
+    formData.delete('auction_duration');
   }
 
   try {
     console.log('About to submit form...');
+    console.log('Final form data:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
     
     await apiFetch("/api/items", {
       method: "POST",
@@ -256,13 +310,33 @@ async function editItem(id) {
   console.log('Item ID:', id);
   console.log('ID Type:', typeof id);
   
+  if (!id) {
+    console.error('ERROR: No ID provided to editItem');
+    alert('Error: No item ID provided');
+    return;
+  }
+  
   try {
     const item = await apiFetch(`/api/items/${id}`);
     console.log('Successfully loaded item:', item);
 
-    // Store ID in form's dataset
+    // Store ID in multiple places for redundancy
     editForm.dataset.itemId = String(id);
-    console.log('Stored in dataset:', editForm.dataset.itemId);
+    editForm.setAttribute('data-item-id', String(id));
+    
+    // Also store in a hidden input as backup
+    let hiddenInput = editForm.querySelector('input[name="item_id"]');
+    if (!hiddenInput) {
+      hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = 'item_id';
+      editForm.appendChild(hiddenInput);
+    }
+    hiddenInput.value = String(id);
+    
+    console.log('Stored ID in dataset:', editForm.dataset.itemId);
+    console.log('Stored ID in attribute:', editForm.getAttribute('data-item-id'));
+    console.log('Stored ID in hidden input:', hiddenInput.value);
 
     // Populate form fields
     editForm.title.value = item.title;
@@ -273,14 +347,34 @@ async function editItem(id) {
     const select = editForm.querySelector('select[name="is_auction"]');
     if (select) {
       select.value = item.is_auction ? "true" : "false";
-      toggleAuctionDurationVisibility(select, editForm);
+      
+      // Show/hide auction duration container
+      const durationContainer = editForm.querySelector('.auction-duration-container');
+      if (durationContainer) {
+        durationContainer.style.display = item.is_auction ? 'block' : 'none';
+      }
     }
 
-    // If it's an auction, set the duration
-    if (item.is_auction && item.auction_duration) {
+    // If it's an auction, calculate and set the duration
+    if (item.is_auction && item.auction_end_time) {
       const durationSelect = editForm.querySelector('select[name="auction_duration"]');
       if (durationSelect) {
-        durationSelect.value = item.auction_duration;
+        // Calculate remaining time to determine original duration
+        const endTime = new Date(item.auction_end_time);
+        const startTime = new Date(item.created_at);
+        const durationMs = endTime - startTime;
+        const durationHours = durationMs / (1000 * 60 * 60);
+        
+        // Map to closest duration option
+        if (durationHours <= 3) {
+          durationSelect.value = '2h';
+        } else if (durationHours <= 30) {
+          durationSelect.value = '1d';
+        } else {
+          durationSelect.value = '1.5d';
+        }
+        
+        console.log('Set auction duration to:', durationSelect.value);
       }
     }
 
@@ -299,17 +393,25 @@ editForm?.addEventListener("submit", async (e) => {
 
   console.log('=== EDIT FORM SUBMIT ===');
   
-  const id = editForm.dataset.itemId;
-  console.log('ID from dataset:', id);
+  // Try multiple methods to get the ID
+  let id = editForm.dataset.itemId || 
+           editForm.getAttribute('data-item-id') || 
+           editForm.querySelector('input[name="item_id"]')?.value;
+  
+  console.log('ID from dataset:', editForm.dataset.itemId);
+  console.log('ID from attribute:', editForm.getAttribute('data-item-id'));
+  console.log('ID from hidden input:', editForm.querySelector('input[name="item_id"]')?.value);
+  console.log('Final ID:', id);
 
   if (!id) {
-    alert("Item ID is missing. Please try again.");
+    console.error('ERROR: No item ID found in form');
+    alert("Item ID is missing. Please close this form and try editing the item again.");
     return;
   }
 
   // Get form values
-  const title = editForm.title.value;
-  const description = editForm.description.value;
+  const title = editForm.title.value.trim();
+  const description = editForm.description.value.trim();
   const starting_price = editForm.starting_price.value;
   const category = editForm.category.value;
   const is_auction = editForm.is_auction.value;
@@ -322,21 +424,36 @@ editForm?.addEventListener("submit", async (e) => {
     return;
   }
 
-  // Validate auction duration if needed
+  // Validate is_auction value
+  if (is_auction !== "true" && is_auction !== "false") {
+    alert("Please select a valid auction type.");
+    return;
+  }
+
+  // Get auction duration if it's an auction
   let auction_duration = null;
   if (is_auction === "true") {
-    auction_duration = editForm.auction_duration.value;
-    console.log('Auction duration:', auction_duration);
+    const durationSelect = editForm.querySelector('select[name="auction_duration"]');
+    auction_duration = durationSelect?.value;
     
-    if (!auction_duration) {
-      alert("Please select a valid auction duration.");
+    console.log('Duration select:', durationSelect);
+    console.log('Auction duration value:', auction_duration);
+    
+    if (!auction_duration || auction_duration === "") {
+      alert("Please select a valid auction duration for auction items.");
+      return;
+    }
+    
+    // Validate duration value
+    if (!['2h', '1d', '1.5d'].includes(auction_duration)) {
+      alert("Invalid auction duration. Please select 2h, 1d, or 1.5d.");
       return;
     }
   }
 
   // Check for new image
   const imageInput = editForm.image;
-  const hasNewImage = imageInput.files && imageInput.files.length > 0;
+  const hasNewImage = imageInput?.files && imageInput.files.length > 0;
   console.log('Has new image:', hasNewImage);
 
   try {
@@ -348,8 +465,10 @@ editForm?.addEventListener("submit", async (e) => {
     formData.append('category', category);
     formData.append('is_auction', is_auction);
     
+    // Only append auction_duration if it's an auction and has a value
     if (is_auction === "true" && auction_duration) {
       formData.append('auction_duration', auction_duration);
+      console.log('Appending auction_duration:', auction_duration);
     }
     
     if (hasNewImage) {
@@ -373,8 +492,16 @@ editForm?.addEventListener("submit", async (e) => {
     });
 
     console.log('Update successful');
+    alert('Listing updated successfully!');
     editModal.style.display = "none";
     editForm.reset();
+    
+    // Clear the stored ID
+    delete editForm.dataset.itemId;
+    editForm.removeAttribute('data-item-id');
+    const hiddenInput = editForm.querySelector('input[name="item_id"]');
+    if (hiddenInput) hiddenInput.remove();
+    
     await loadListings();
   } catch (err) {
     console.error('Edit form error:', err);
