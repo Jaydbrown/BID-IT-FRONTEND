@@ -34,18 +34,21 @@ form.addEventListener('submit', async (event) => {
     form.firstname.focus();
     return;
   }
+
   if (!lettersOnly(surname)) {
     message.textContent = 'Surname should contain letters only.';
     message.classList.add('error');
     form.surname.focus();
     return;
   }
+
   if (!isValidEmail(email)) {
     message.textContent = 'Please enter a valid email address.';
     message.classList.add('error');
     form.email.focus();
     return;
   }
+
   if (password !== confirmPassword) {
     message.textContent = 'Passwords do not match.';
     message.classList.add('error');
@@ -54,65 +57,65 @@ form.addEventListener('submit', async (event) => {
   }
 
   // Disable submit button to prevent double submissions
-  form.querySelector('button[type="submit"]').disabled = true;
+  const submitBtn = form.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
 
   try {
     // Send signup data to your backend API
-    const response = await fetch('https://bid-it-backend.onrender.com/api/auth/signup', {  // Adjust URL to your backend route
+    const response = await fetch('https://bid-it-backend.onrender.com/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-  username: `${firstname} ${surname}`, // or use separate input
-  email,
-  password,
-  institution,
-}),
-
+        username: `${firstname} ${surname}`,
+        email,
+        password,
+        institution,
+      }),
     });
 
     if (!response.ok) {
-  let errorMessage = 'Signup failed';
-  try {
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const errorData = await response.json();
-      errorMessage = errorData.message || errorMessage;
-    } else {
-      const errorText = await response.text();
-      errorMessage = errorText || errorMessage;
+      let errorMessage = 'Signup failed';
+      try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } else {
+          const errorText = await response.text();
+          errorMessage = errorText || errorMessage;
+        }
+      } catch (e) {
+        console.warn('Error parsing error response:', e);
+      }
+      throw new Error(errorMessage);
     }
-  } catch (e) {
-    console.warn('Error parsing error response:', e);
-  }
-  throw new Error(errorMessage);
-}
 
-
-    // Prepare email params for EmailJS
-    const templateParams = {
-      to_email: email,
-      to_name: `${firstname} ${surname}`,
-      institution,
-    };
-
-    // Send notification email via EmailJS
-    await emailjs.send('service_8e47kwk', 'YOUR_TEMPLATE_ID', templateParams);
-
+    // Account created successfully
     message.textContent = 'Account created successfully! Redirecting...';
     message.classList.add('success');
 
+    // Send notification email via EmailJS (don't block redirect if this fails)
+    try {
+      const templateParams = {
+        to_email: email,
+        to_name: `${firstname} ${surname}`,
+        institution,
+      };
+      await emailjs.send('service_8e47kwk', 'YOUR_TEMPLATE_ID', templateParams);
+    } catch (emailError) {
+      console.warn('Email notification failed, but signup was successful:', emailError);
+      // Don't show error to user since signup succeeded
+    }
+
+    // Redirect after delay
     setTimeout(() => {
-      window.location.href = '/sellerPage.html'; // Adjust redirect if needed
+      window.location.href = '/sellerPage.html';
     }, 2000);
 
   } catch (error) {
     message.textContent = error.message;
     message.classList.add('error');
-    console.error('Error:', error);
-  } finally {
-    // Re-enable submit button
-    form.querySelector('button[type="submit"]').disabled = false;
+    console.error('Signup Error:', error);
+    submitBtn.disabled = false; // Re-enable only on error
   }
 });
-
-
