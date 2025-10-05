@@ -287,19 +287,22 @@ window.editItem = editItem; // ADD THIS LINE - it was missing!
 editForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  console.log('Edit form submitted'); // DEBUG
   const id = editForm.dataset.itemId;
-  console.log('Editing item ID:', id); // DEBUG
+  console.log("Editing item ID:", id);
 
   if (!id) {
-    alert("Item ID is missing. Please try again.");
+    alert("Item ID is missing. Cannot update.");
+    return;
+  }
+
+  // Optional: if backend uses MongoDB ObjectId
+  if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+    alert("Item ID is invalid format.");
     return;
   }
 
   const formData = new FormData(editForm);
-  
-  // Remove the id field - it should only be in the URL
-  formData.delete("id");
+  formData.delete("id"); // ID should only be in URL
 
   if (formData.get("is_auction") === "true") {
     const duration = formData.get("auction_duration");
@@ -310,18 +313,17 @@ editForm?.addEventListener("submit", async (e) => {
   }
 
   try {
-    console.log(`Sending PATCH to /api/items/${id}`); // DEBUG
-    
+    console.log(`Sending PATCH to /api/items/${id}`);
     await apiFetch(`/api/items/${id}`, {
       method: "PATCH",
       body: formData,
     });
 
-    console.log('Update successful'); // DEBUG
+    console.log("Update successful");
     editModal.style.display = "none";
     await loadListings();
   } catch (err) {
-    console.error('Edit form error:', err);
+    console.error("Edit form error:", err);
     alert(`Failed to update listing: ${err.message}`);
   }
 });
@@ -401,6 +403,7 @@ async function testEndpoints() {
 console.log('sellerPage.js loaded');
 testEndpoints();
 loadListings();
+
 
 
 
