@@ -1,10 +1,15 @@
+// Fixed sellerPage.js - single loadListings, robust ID handling, no duplicate functions
+// Changes made:
+// - Removed duplicate loadListings definitions
+// - Use event listeners (no inline onclick)
+// - Normalize item ID (item.id || item.item_id || item._id)
+// - Ensure editForm is set only once (global) and dataset.itemId is always set before submit
+// - Added small helpers and extra console logs for debugging
+
 // ==========================
 // BYPASS PROVIDER.JS INTERFERENCE
 // ==========================
-// Store the original fetch before any extensions can override it
 const originalFetch = window.fetch;
-
-// Create a clean fetch function that bypasses provider.js
 function cleanFetch(url, options) {
   return originalFetch.call(window, url, options);
 }
@@ -16,32 +21,6 @@ const API_BASE_URL = "https://bid-it-backend.onrender.com";
 const token = localStorage.getItem("token");
 
 // ==========================
-// SIDEBAR TOGGLE HANDLING
-// ==========================
-const sidebar = document.getElementById("mySidebar");
-const hamburger = document.getElementById("hamburger");
-const closeBtn = sidebar.querySelector(".closebtn");
-
-function openSidebar() {
-  sidebar.style.width = window.innerWidth <= 768 ? "100%" : "30%";
-  sidebar.setAttribute("aria-hidden", "false");
-}
-
-function closeSidebar() {
-  sidebar.style.width = "0";
-  sidebar.setAttribute("aria-hidden", "true");
-}
-
-hamburger.addEventListener("click", openSidebar);
-hamburger.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") openSidebar();
-});
-closeBtn.addEventListener("click", closeSidebar);
-sidebar.addEventListener("click", (e) => {
-  if (e.target === sidebar) closeSidebar();
-});
-
-// ==========================
 // ELEMENT REFERENCES
 // ==========================
 const listingContainer = document.getElementById("listingContainer");
@@ -50,7 +29,7 @@ const activeCountEl = document.getElementById("activeCount");
 const addModal = document.getElementById("addListingModal");
 const addForm = document.getElementById("addListingForm");
 const openModalBtn = document.getElementById("openAddListingModal");
-const closeModalBtn = addModal.querySelector(".close-btn");
+const closeModalBtn = addModal?.querySelector(".close-btn");
 
 const editModal = document.getElementById("editListingModal");
 const editForm = document.getElementById("editListingForm");
@@ -58,28 +37,41 @@ const closeEditModalBtn = editModal?.querySelector(".close-btn");
 
 const profileModal = document.getElementById("profileModal");
 const openProfileBtn = document.getElementById("openProfileModal");
-const closeProfileBtn = profileModal.querySelector(".close-btn");
+const closeProfileBtn = profileModal?.querySelector(".close-btn");
 
 // ==========================
 // MODAL HANDLING
 // ==========================
-openModalBtn.onclick = () => (addModal.style.display = "flex");
-closeModalBtn.onclick = () => (addModal.style.display = "none");
-closeEditModalBtn?.addEventListener("click", () => (editModal.style.display = "none"));
-closeProfileBtn.onclick = () => (profileModal.style.display = "none");
+openModalBtn?.addEventListener("click", () => { if (addModal) addModal.style.display = "flex"; });
+closeModalBtn?.addEventListener("click", () => { if (addModal) addModal.style.display = "none"; });
+closeEditModalBtn?.addEventListener("click", () => { if (editModal) editModal.style.display = "none"; });
+closeProfileBtn?.addEventListener("click", () => { if (profileModal) profileModal.style.display = "none"; });
 
-window.onclick = (e) => {
+window.addEventListener('click', (e) => {
   if (e.target === addModal) addModal.style.display = "none";
   if (e.target === editModal) editModal.style.display = "none";
   if (e.target === profileModal) profileModal.style.display = "none";
-};
+});
 
 // ==========================
 // TOKEN VALIDATION
 // ==========================
 if (!token) {
   alert("Session expired. Please log in again.");
-  window.location.href = "/frontend/login.html";
+  window.location.replace("/frontend/login.html");
+}
+
+// ==========================
+// HELPERS
+// ==========================
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // ==========================
@@ -90,9 +82,8 @@ async function apiFetch(url, options = {}) {
     const headers = { Authorization: `Bearer ${token}`, ...(options.headers || {}) };
     let body = options.body;
 
-    // Handle FormData specially
     if (body instanceof FormData) {
-      // Don't set Content-Type for FormData - let browser handle it
+      // let browser set Content-Type (multipart/form-data)
     } else if (body) {
       headers["Content-Type"] = "application/json";
       body = JSON.stringify(body);
@@ -108,7 +99,6 @@ async function apiFetch(url, options = {}) {
     console.log('Request method:', fetchOptions.method);
     console.log('Request headers:', fetchOptions.headers);
 
-    // Use cleanFetch instead of window.fetch to bypass provider.js
     const res = await cleanFetch(`${API_BASE_URL}${url}`, fetchOptions);
 
     console.log('Response status:', res.status);
@@ -116,18 +106,13 @@ async function apiFetch(url, options = {}) {
 
     if (!res.ok) {
       let errorData = {};
-      try {
-        errorData = await res.json();
-      } catch (e) {
-        console.log('Could not parse error response as JSON');
-      }
+      try { errorData = await res.json(); } catch (e) { console.log('Could not parse error response as JSON'); }
       throw new Error(errorData.message || `HTTP ${res.status}: ${res.statusText}`);
     }
 
     const responseData = await res.json();
     console.log('Response data:', responseData);
     return responseData;
-    
   } catch (err) {
     console.error(`API Error [${url}]:`, err);
     throw err;
@@ -135,39 +120,66 @@ async function apiFetch(url, options = {}) {
 }
 
 // ==========================
-// LOAD LISTINGS
+// SINGLE LOAD LISTINGS
 // ==========================
 async function loadListings() {
   console.log('Loading listings...');
+  if (!listingContainer) return;
   listingContainer.innerHTML = "";
-  
+
   try {
     const items = await apiFetch("/api/items/my");
     console.log('Loaded items:', items);
 
-    activeCountEl.textContent = items.length;
+    const safeItems = Array.isArray(items) ? items : [];
+    activeCountEl && (activeCountEl.textContent = String(safeItems.length));
 
-    if (items.length === 0) {
+    if (safeItems.length === 0) {
       listingContainer.innerHTML = `<p class="no-listings">No active listings yet.</p>`;
       return;
     }
 
-    items.forEach((item) => {
+    safeItems.forEach((item) => {
       const card = document.createElement("div");
       card.className = "listing-card";
+
+      const imageUrl = item.image_url ? `${API_BASE_URL}${item.image_url}` : "https://via.placeholder.com/100";
+      const title = escapeHtml(item.title || "Untitled");
+      const price = Number(item.starting_price || 0).toLocaleString();
+
       card.innerHTML = `
         <div class="listing-image">
-          <img src="${item.image_url ? `${API_BASE_URL}${item.image_url}` : "https://via.placeholder.com/100"}" alt="${item.title}">
+          <img src="${imageUrl}" alt="${title}">
         </div>
         <div class="listing-info">
-          <h4>${item.title}</h4>
-          <p>₦${item.starting_price.toLocaleString()}</p>
+          <h4>${title}</h4>
+          <p>₦${price}</p>
         </div>
         <div class="listing-actions">
-          <button class="edit" onclick="editItem('${item.id}')">Edit</button>
-          <button class="delete" onclick="deleteItem('${item.id}')">Delete</button>
+          <button class="edit">Edit</button>
+          <button class="delete">Delete</button>
         </div>
       `;
+
+      const editBtn = card.querySelector('.edit');
+      const deleteBtn = card.querySelector('.delete');
+
+      // Resolve ID from common fields
+      const resolvedId = item.id ?? item.item_id ?? item._id;
+      console.log('Attaching listeners for item id:', resolvedId, 'item object:', item);
+
+      editBtn.addEventListener('click', () => {
+        editItem(resolvedId);
+      });
+
+      deleteBtn.addEventListener('click', () => {
+        if (!resolvedId) {
+          alert('Cannot delete: invalid item id');
+          return;
+        }
+        deleteItem(resolvedId);
+      });
+
       listingContainer.appendChild(card);
     });
   } catch (err) {
@@ -179,18 +191,12 @@ async function loadListings() {
 // ==========================
 // ADD LISTING
 // ==========================
-addForm.addEventListener("submit", async (e) => {
+addForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  
   console.log('Add form submitted');
-  
+
   const formData = new FormData(addForm);
-  
-  // Log form data for debugging
-  console.log('Form data entries:');
-  for (let [key, value] of formData.entries()) {
-    console.log(`${key}:`, value);
-  }
+  for (let [k, v] of formData.entries()) console.log(k, v);
 
   if (!formData.get("title") || !formData.get("description") || !formData.get("starting_price") || !formData.get("category")) {
     alert("Please fill all required fields.");
@@ -213,17 +219,10 @@ addForm.addEventListener("submit", async (e) => {
   }
 
   try {
-    console.log('About to submit form...');
-    
-    // Make sure the URL doesn't have trailing slash
-    await apiFetch("/api/items", {
-      method: "POST",
-      body: formData,
-    });
-
-    console.log('Form submitted successfully');
+    console.log('About to submit add form...');
+    await apiFetch("/api/items", { method: "POST", body: formData });
     addForm.reset();
-    addModal.style.display = "none";
+    addModal && (addModal.style.display = "none");
     await loadListings();
   } catch (err) {
     console.error('Form submission error:', err);
@@ -235,11 +234,13 @@ addForm.addEventListener("submit", async (e) => {
 // DELETE ITEM
 // ==========================
 async function deleteItem(id) {
+  if (!id) { alert('Invalid id'); return; }
   if (!confirm("Are you sure you want to delete this item?")) return;
   try {
-    await apiFetch(`/api/items/${id}`, { method: "DELETE" });
+    await apiFetch(`/api/items/${Number(id)}`, { method: "DELETE" });
     await loadListings();
   } catch (err) {
+    console.error('Delete error:', err);
     alert("Failed to delete listing.");
   }
 }
@@ -248,80 +249,27 @@ window.deleteItem = deleteItem;
 // ==========================
 // EDIT ITEM
 // ==========================
-// ==========================
-// EDIT ITEM
-// ==========================
-// ==========================
-// LOAD LISTINGS
-// ==========================
-async function loadListings() {
-  console.log('Loading listings...');
-  listingContainer.innerHTML = "";
-  
-  try {
-    const items = await apiFetch("/api/items/my");
-    console.log('Loaded items:', items);
-
-    activeCountEl.textContent = items.length;
-
-    if (items.length === 0) {
-      listingContainer.innerHTML = `<p class="no-listings">No active listings yet.</p>`;
-      return;
-    }
-
-    items.forEach((item) => {
-      const card = document.createElement("div");
-      card.className = "listing-card";
-      card.innerHTML = `
-        <div class="listing-image">
-          <img src="${item.image_url ? `${API_BASE_URL}${item.image_url}` : "https://via.placeholder.com/100"}" alt="${item.title}">
-        </div>
-        <div class="listing-info">
-          <h4>${item.title}</h4>
-          <p>₦${item.starting_price.toLocaleString()}</p>
-        </div>
-        <div class="listing-actions">
-          <button class="edit" data-id="${item.id}">Edit</button>
-          <button class="delete" data-id="${item.id}">Delete</button>
-        </div>
-      `;
-      
-      // Add event listeners instead of onclick attributes
-      const editBtn = card.querySelector('.edit');
-      const deleteBtn = card.querySelector('.delete');
-      
-      editBtn.addEventListener('click', () => editItem(item.id));
-      deleteBtn.addEventListener('click', () => deleteItem(item.id));
-      
-      listingContainer.appendChild(card);
-    });
-  } catch (err) {
-    console.error('Failed to load listings:', err);
-    alert("Failed to load your listings. Please try again later.");
-  }
-}
-
-// ==========================
-// EDIT ITEM
-// ==========================
 async function editItem(id) {
   console.log('=== EDIT ITEM CALLED ===');
   console.log('Raw ID:', id);
-  console.log('ID Type:', typeof id);
-  console.log('ID value:', JSON.stringify(id));
-  
+  if (id === undefined || id === null) {
+    alert('Invalid item id');
+    return;
+  }
+
   try {
-    const item = await apiFetch(`/api/items/${id}`);
+    const item = await apiFetch(`/api/items/${Number(id)}`);
     console.log('Successfully loaded item:', item);
 
-    // Store ID in form's dataset
-    editForm.dataset.itemId = String(id);
+    const resolvedId = item.id ?? item.item_id ?? item._id ?? id;
+    editForm.dataset.itemId = String(resolvedId);
     console.log('Stored in dataset:', editForm.dataset.itemId);
 
-    editForm.title.value = item.title;
-    editForm.description.value = item.description;
-    editForm.starting_price.value = item.starting_price;
-    editForm.category.value = item.category || "";
+    // populate form fields safely
+    editForm.querySelector('input[name="title"]') && (editForm.querySelector('input[name="title"]').value = item.title ?? '');
+    editForm.querySelector('textarea[name="description"]') && (editForm.querySelector('textarea[name="description"]').value = item.description ?? '');
+    editForm.querySelector('input[name="starting_price"]') && (editForm.querySelector('input[name="starting_price"]').value = item.starting_price ?? '');
+    editForm.querySelector('select[name="category"]') && (editForm.querySelector('select[name="category"]').value = item.category ?? '');
 
     const select = editForm.querySelector('select[name="is_auction"]');
     if (select) {
@@ -329,164 +277,118 @@ async function editItem(id) {
       toggleAuctionDurationVisibility(select, editForm);
     }
 
-    editModal.style.display = "flex";
+    editModal && (editModal.style.display = "flex");
   } catch (err) {
     console.error('Error in editItem:', err);
     alert("Failed to load item for editing.");
   }
 }
+window.editItem = editItem;
 
 // ==========================
 // EDIT FORM SUBMISSION
 // ==========================
 editForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
-
   console.log('=== FORM SUBMIT CALLED ===');
-  
-  const id = editForm.dataset.itemId;
-  console.log('ID from dataset:', id);
 
-  if (!id) {
-    alert("Item ID is missing. Please try again.");
+  const rawId = editForm.dataset.itemId;
+  const id = rawId?.trim();
+  console.log('ID from dataset:', id);
+  if (!id || isNaN(Number(id))) {
+    alert("Item ID is missing or invalid. Please try again.");
     return;
   }
 
-  // Get form values
-  const title = editForm.title.value;
-  const description = editForm.description.value;
-  const starting_price = editForm.starting_price.value;
-  const category = editForm.category.value;
-  const is_auction = editForm.is_auction.value;
-  
+  const title = editForm.querySelector('input[name="title"]')?.value || '';
+  const description = editForm.querySelector('textarea[name="description"]')?.value || '';
+  const starting_price = editForm.querySelector('input[name="starting_price"]')?.value || '';
+  const category = editForm.querySelector('select[name="category"]')?.value || '';
+  const is_auction = editForm.querySelector('select[name="is_auction"]')?.value || 'false';
+
   console.log('Form values:', { title, description, starting_price, category, is_auction });
 
-  // Validate auction duration if needed
   let auction_duration = null;
   if (is_auction === "true") {
-    auction_duration = editForm.auction_duration.value;
-    console.log('Auction duration:', auction_duration);
-    
-    if (!auction_duration) {
-      alert("Please select a valid auction duration.");
-      return;
-    }
+    auction_duration = editForm.querySelector('select[name="auction_duration"]')?.value;
+    if (!auction_duration) { alert('Please select auction duration'); return; }
   }
 
-  // Check for new image
-  const imageInput = editForm.image;
-  const hasNewImage = imageInput.files && imageInput.files.length > 0;
+  const imageInput = editForm.querySelector('input[name="image"]');
+  const hasNewImage = imageInput && imageInput.files && imageInput.files.length > 0;
   console.log('Has new image:', hasNewImage);
 
   try {
-    // Create FormData
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
     formData.append('starting_price', starting_price);
     formData.append('category', category);
     formData.append('is_auction', is_auction);
-    
-    if (is_auction === "true" && auction_duration) {
-      formData.append('auction_duration', auction_duration);
-    }
-    
-    if (hasNewImage) {
-      formData.append('image', imageInput.files[0]);
-    }
+    if (auction_duration) formData.append('auction_duration', auction_duration);
+    if (hasNewImage) formData.append('image', imageInput.files[0]);
 
     console.log('=== SENDING FORMDATA ===');
     for (let [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        console.log(`${key}: [File: ${value.name}]`);
-      } else {
-        console.log(`${key}: "${value}"`);
-      }
+      if (value instanceof File) console.log(`${key}: [File: ${value.name}]`);
+      else console.log(`${key}: "${value}"`);
     }
 
-    console.log(`Making PATCH request to: /api/items/${id}`);
-    
-    await apiFetch(`/api/items/${id}`, {
-      method: "PATCH",
-      body: formData,
-    });
+    console.log(`Making PATCH request to: /api/items/${Number(id)}`);
+    await apiFetch(`/api/items/${Number(id)}`, { method: "PATCH", body: formData });
 
     console.log('Update successful');
-    editModal.style.display = "none";
+    editModal && (editModal.style.display = "none");
     await loadListings();
   } catch (err) {
     console.error('Edit form error:', err);
     alert(`Failed to update listing: ${err.message}`);
   }
 });
+
 // ==========================
 // AUCTION DURATION TOGGLE
 // ==========================
+function toggleAuctionDurationVisibility(select, form) {
+  const durationContainer = form.querySelector(".auction-duration-container");
+  if (durationContainer) durationContainer.style.display = select.value === "true" ? "block" : "none";
+}
+
 document.querySelectorAll('select[name="is_auction"]').forEach((select) => {
   select.addEventListener("change", () => toggleAuctionDurationVisibility(select, select.closest("form")));
 });
 
-document.querySelectorAll('#editListingForm select[name="is_auction"]').forEach((select) => {
-  select.addEventListener('change', () => {
-    const form = select.closest('form');
-    const container = form.querySelector('.auction-duration-container');
-    container.style.display = select.value === 'true' ? 'block' : 'none';
-  });
-});
-
-function toggleAuctionDurationVisibility(select, form) {
-  const durationContainer = form.querySelector(".auction-duration-container");
-  durationContainer.style.display = select.value === "true" ? "block" : "none";
-}
-
 // ==========================
 // PROFILE MODAL
 // ==========================
-openProfileBtn.onclick = async () => {
+openProfileBtn?.addEventListener('click', async () => {
   try {
     const data = await apiFetch("/api/users/me");
-
     document.getElementById("profileUsername").textContent = data.username || "N/A";
     document.getElementById("profileEmail").textContent = data.email || "N/A";
     document.getElementById("profileInstitution").textContent = data.institution || "N/A";
     document.getElementById("profileCreatedAt").textContent = new Date(data.created_at).toLocaleDateString();
-
-    profileModal.style.display = "flex";
+    profileModal && (profileModal.style.display = "flex");
   } catch (err) {
     alert("Could not load profile information.");
   }
-};
+});
 
 // ==========================
 // TEST ENDPOINTS FUNCTION
 // ==========================
 async function testEndpoints() {
   console.log('Testing endpoints...');
-  
-  // Test basic connectivity
   try {
-    const response = await cleanFetch('https://bid-it-backend.onrender.com/api/items');
+    const response = await cleanFetch(`${API_BASE_URL}/api/items`);
     console.log('Basic endpoint test - Status:', response.status);
-  } catch (error) {
-    console.error('Basic endpoint test failed:', error);
-  }
-  
-  // Test authenticated endpoint
+  } catch (error) { console.error('Basic endpoint test failed:', error); }
+
   try {
-    const response = await cleanFetch('https://bid-it-backend.onrender.com/api/items/my', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    const response = await cleanFetch(`${API_BASE_URL}/api/items/my`, { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } });
     console.log('Auth endpoint test - Status:', response.status);
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Auth endpoint data:', data);
-    }
-  } catch (error) {
-    console.error('Auth endpoint test failed:', error);
-  }
+    if (response.ok) { const data = await response.json(); console.log('Auth endpoint data:', data); }
+  } catch (error) { console.error('Auth endpoint test failed:', error); }
 }
 
 // ==========================
@@ -495,10 +397,3 @@ async function testEndpoints() {
 console.log('sellerPage.js loaded');
 testEndpoints();
 loadListings();
-
-
-
-
-
-
-
