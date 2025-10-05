@@ -343,71 +343,79 @@ editForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   console.log('=== FORM SUBMIT CALLED ===');
-  console.log('editForm.dataset:', editForm.dataset);
   
   const id = editForm.dataset.itemId;
-  console.log('Retrieved ID:', id);
-  console.log('ID Type:', typeof id);
-  console.log('ID value:', JSON.stringify(id));
+  console.log('ID from dataset:', id);
 
   if (!id) {
     alert("Item ID is missing. Please try again.");
     return;
   }
 
-  const formData = new FormData(editForm);
+  // Get form values
+  const title = editForm.title.value;
+  const description = editForm.description.value;
+  const starting_price = editForm.starting_price.value;
+  const category = editForm.category.value;
+  const is_auction = editForm.is_auction.value;
   
-  console.log('=== FORMDATA BEFORE DELETE ===');
-  for (let [key, value] of formData.entries()) {
-    console.log(`${key}:`, value);
-  }
-  
-  formData.delete("id");
-  
-  console.log('=== FORMDATA AFTER DELETE ===');
-  for (let [key, value] of formData.entries()) {
-    console.log(`${key}:`, value);
-  }
+  console.log('Form values:', { title, description, starting_price, category, is_auction });
 
-  const imageFile = formData.get("image");
-  const hasNewImage = imageFile && imageFile instanceof File && imageFile.size > 0;
-  console.log('Has new image:', hasNewImage);
-
-  if (formData.get("is_auction") === "true") {
-    const duration = formData.get("auction_duration");
-    if (!duration) {
+  // Validate auction duration if needed
+  let auction_duration = null;
+  if (is_auction === "true") {
+    auction_duration = editForm.auction_duration.value;
+    console.log('Auction duration:', auction_duration);
+    
+    if (!auction_duration) {
       alert("Please select a valid auction duration.");
       return;
     }
   }
 
-  if (!hasNewImage) {
-    formData.delete("image");
-    console.log('Deleted empty image field');
-  }
+  // Check for new image
+  const imageInput = editForm.image;
+  const hasNewImage = imageInput.files && imageInput.files.length > 0;
+  console.log('Has new image:', hasNewImage);
 
   try {
-    const url = `/api/items/${id}`;
-    console.log('=== MAKING REQUEST ===');
-    console.log('URL:', url);
-    console.log('Full URL:', `${API_BASE_URL}${url}`);
-    console.log('Method: PATCH');
+    // Create FormData
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('starting_price', starting_price);
+    formData.append('category', category);
+    formData.append('is_auction', is_auction);
     
-    const result = await apiFetch(url, {
+    if (is_auction === "true" && auction_duration) {
+      formData.append('auction_duration', auction_duration);
+    }
+    
+    if (hasNewImage) {
+      formData.append('image', imageInput.files[0]);
+    }
+
+    console.log('=== SENDING FORMDATA ===');
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`${key}: [File: ${value.name}]`);
+      } else {
+        console.log(`${key}: "${value}"`);
+      }
+    }
+
+    console.log(`Making PATCH request to: /api/items/${id}`);
+    
+    await apiFetch(`/api/items/${id}`, {
       method: "PATCH",
       body: formData,
     });
 
-    console.log('=== SUCCESS ===');
-    console.log('Result:', result);
-    
+    console.log('Update successful');
     editModal.style.display = "none";
     await loadListings();
   } catch (err) {
-    console.error('=== ERROR ===');
-    console.error('Error object:', err);
-    console.error('Error message:', err.message);
-    console.error('Error stack:', err.stack);
+    console.error('Edit form error:', err);
     alert(`Failed to update listing: ${err.message}`);
   }
 });
@@ -487,6 +495,7 @@ async function testEndpoints() {
 console.log('sellerPage.js loaded');
 testEndpoints();
 loadListings();
+
 
 
 
