@@ -102,7 +102,7 @@ form.addEventListener('submit', async (event) => {
     message.classList.add('success');
 
     setTimeout(() => {
-      window.location.href = '/login.html'; // Adjust redirect if needed
+      window.location.href = '/sellerPage.html'; // Adjust redirect if needed
     }, 2000);
 
   } catch (error) {
@@ -114,4 +114,5 @@ form.addEventListener('submit', async (event) => {
     form.querySelector('button[type="submit"]').disabled = false;
   }
 });
+
 
