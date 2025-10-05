@@ -2,6 +2,7 @@
 // BYPASS PROVIDER.JS INTERFERENCE
 // ==========================
 const originalFetch = window.fetch;
+
 function cleanFetch(url, options) {
   return originalFetch.call(window, url, options);
 }
@@ -17,28 +18,24 @@ const token = localStorage.getItem("token");
 // ==========================
 const sidebar = document.getElementById("mySidebar");
 const hamburger = document.getElementById("hamburger");
-const closeBtn = sidebar?.querySelector(".closebtn");
+const closeBtn = sidebar.querySelector(".closebtn");
 
 function openSidebar() {
-  if (sidebar) {
-    sidebar.style.width = window.innerWidth <= 768 ? "100%" : "30%";
-    sidebar.setAttribute("aria-hidden", "false");
-  }
+  sidebar.style.width = window.innerWidth <= 768 ? "100%" : "30%";
+  sidebar.setAttribute("aria-hidden", "false");
 }
 
 function closeSidebar() {
-  if (sidebar) {
-    sidebar.style.width = "0";
-    sidebar.setAttribute("aria-hidden", "true");
-  }
+  sidebar.style.width = "0";
+  sidebar.setAttribute("aria-hidden", "true");
 }
 
-hamburger?.addEventListener("click", openSidebar);
-hamburger?.addEventListener("keydown", (e) => {
+hamburger.addEventListener("click", openSidebar);
+hamburger.addEventListener("keydown", (e) => {
   if (e.key === "Enter" || e.key === " ") openSidebar();
 });
-closeBtn?.addEventListener("click", closeSidebar);
-sidebar?.addEventListener("click", (e) => {
+closeBtn.addEventListener("click", closeSidebar);
+sidebar.addEventListener("click", (e) => {
   if (e.target === sidebar) closeSidebar();
 });
 
@@ -51,7 +48,7 @@ const activeCountEl = document.getElementById("activeCount");
 const addModal = document.getElementById("addListingModal");
 const addForm = document.getElementById("addListingForm");
 const openModalBtn = document.getElementById("openAddListingModal");
-const closeModalBtn = addModal?.querySelector(".close-btn");
+const closeModalBtn = addModal.querySelector(".close-btn");
 
 const editModal = document.getElementById("editListingModal");
 const editForm = document.getElementById("editListingForm");
@@ -59,21 +56,21 @@ const closeEditModalBtn = editModal?.querySelector(".close-btn");
 
 const profileModal = document.getElementById("profileModal");
 const openProfileBtn = document.getElementById("openProfileModal");
-const closeProfileBtn = profileModal?.querySelector(".close-btn");
+const closeProfileBtn = profileModal.querySelector(".close-btn");
 
 // ==========================
 // MODAL HANDLING
 // ==========================
-openModalBtn?.addEventListener("click", () => { if (addModal) addModal.style.display = "flex"; });
-closeModalBtn?.addEventListener("click", () => { if (addModal) addModal.style.display = "none"; });
-closeEditModalBtn?.addEventListener("click", () => { if (editModal) editModal.style.display = "none"; });
-closeProfileBtn?.addEventListener("click", () => { if (profileModal) profileModal.style.display = "none"; });
+openModalBtn.onclick = () => (addModal.style.display = "flex");
+closeModalBtn.onclick = () => (addModal.style.display = "none");
+closeEditModalBtn?.addEventListener("click", () => (editModal.style.display = "none"));
+closeProfileBtn.onclick = () => (profileModal.style.display = "none");
 
-window.addEventListener('click', (e) => {
+window.onclick = (e) => {
   if (e.target === addModal) addModal.style.display = "none";
   if (e.target === editModal) editModal.style.display = "none";
   if (e.target === profileModal) profileModal.style.display = "none";
-});
+};
 
 // ==========================
 // TOKEN VALIDATION
@@ -84,7 +81,7 @@ if (!token) {
 }
 
 // ==========================
-// UPDATED apiFetch FUNCTION
+// API FETCH FUNCTION
 // ==========================
 async function apiFetch(url, options = {}) {
   try {
@@ -104,7 +101,12 @@ async function apiFetch(url, options = {}) {
       body,
     };
 
+    console.log('Making request to:', `${API_BASE_URL}${url}`);
+    console.log('Request method:', fetchOptions.method);
+
     const res = await cleanFetch(`${API_BASE_URL}${url}`, fetchOptions);
+
+    console.log('Response status:', res.status);
 
     if (!res.ok) {
       let errorData = {};
@@ -117,7 +119,9 @@ async function apiFetch(url, options = {}) {
     }
 
     const responseData = await res.json();
+    console.log('Response data:', responseData);
     return responseData;
+    
   } catch (err) {
     console.error(`API Error [${url}]:`, err);
     throw err;
@@ -128,15 +132,14 @@ async function apiFetch(url, options = {}) {
 // LOAD LISTINGS
 // ==========================
 async function loadListings() {
-  if (!listingContainer) return;
+  console.log('Loading listings...');
   listingContainer.innerHTML = "";
-
+  
   try {
     const items = await apiFetch("/api/items/my");
-    
-    if (activeCountEl) {
-      activeCountEl.textContent = items.length;
-    }
+    console.log('Loaded items:', items);
+
+    activeCountEl.textContent = items.length;
 
     if (items.length === 0) {
       listingContainer.innerHTML = `<p class="no-listings">No active listings yet.</p>`;
@@ -146,29 +149,27 @@ async function loadListings() {
     items.forEach((item) => {
       const card = document.createElement("div");
       card.className = "listing-card";
-
-      const imageUrl = item.image_url ? `${API_BASE_URL}${item.image_url}` : "https://via.placeholder.com/100";
-      
       card.innerHTML = `
         <div class="listing-image">
-          <img src="${imageUrl}" alt="${item.title}">
+          <img src="${item.image_url ? `${API_BASE_URL}${item.image_url}` : "https://via.placeholder.com/100"}" alt="${item.title}">
         </div>
         <div class="listing-info">
           <h4>${item.title}</h4>
           <p>₦${item.starting_price.toLocaleString()}</p>
         </div>
         <div class="listing-actions">
-          <button class="edit">Edit</button>
-          <button class="delete">Delete</button>
+          <button class="edit" data-id="${item.id}">Edit</button>
+          <button class="delete" data-id="${item.id}">Delete</button>
         </div>
       `;
-
+      
+      // Add event listeners with proper ID passing
       const editBtn = card.querySelector('.edit');
       const deleteBtn = card.querySelector('.delete');
-
+      
       editBtn.addEventListener('click', () => editItem(item.id));
       deleteBtn.addEventListener('click', () => deleteItem(item.id));
-
+      
       listingContainer.appendChild(card);
     });
   } catch (err) {
@@ -180,10 +181,17 @@ async function loadListings() {
 // ==========================
 // ADD LISTING
 // ==========================
-addForm?.addEventListener("submit", async (e) => {
+addForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-
+  
+  console.log('Add form submitted');
+  
   const formData = new FormData(addForm);
+  
+  console.log('Form data entries:');
+  for (let [key, value] of formData.entries()) {
+    console.log(`${key}:`, value);
+  }
 
   if (!formData.get("title") || !formData.get("description") || !formData.get("starting_price") || !formData.get("category")) {
     alert("Please fill all required fields.");
@@ -202,16 +210,20 @@ addForm?.addEventListener("submit", async (e) => {
       alert("Please select auction duration.");
       return;
     }
+    formData.append("auction_duration", selectedDuration);
   }
 
   try {
+    console.log('About to submit form...');
+    
     await apiFetch("/api/items", {
       method: "POST",
       body: formData,
     });
 
+    console.log('Form submitted successfully');
     addForm.reset();
-    if (addModal) addModal.style.display = "none";
+    addModal.style.display = "none";
     await loadListings();
   } catch (err) {
     console.error('Form submission error:', err);
@@ -223,6 +235,8 @@ addForm?.addEventListener("submit", async (e) => {
 // DELETE ITEM
 // ==========================
 async function deleteItem(id) {
+  console.log('Delete item called with ID:', id);
+  
   if (!confirm("Are you sure you want to delete this item?")) return;
   
   try {
@@ -238,22 +252,23 @@ async function deleteItem(id) {
 // EDIT ITEM
 // ==========================
 async function editItem(id) {
-  if (!id) {
-    alert('Invalid item ID');
-    return;
-  }
-
+  console.log('=== EDIT ITEM CALLED ===');
+  console.log('Item ID:', id);
+  console.log('ID Type:', typeof id);
+  
   try {
     const item = await apiFetch(`/api/items/${id}`);
+    console.log('Successfully loaded item:', item);
 
-    // Store ID in dataset
+    // Store ID in form's dataset
     editForm.dataset.itemId = String(id);
+    console.log('Stored in dataset:', editForm.dataset.itemId);
 
     // Populate form fields
-    editForm.querySelector('input[name="title"]').value = item.title;
-    editForm.querySelector('textarea[name="description"]').value = item.description;
-    editForm.querySelector('input[name="starting_price"]').value = item.starting_price;
-    editForm.querySelector('select[name="category"]').value = item.category || "";
+    editForm.title.value = item.title;
+    editForm.description.value = item.description;
+    editForm.starting_price.value = item.starting_price;
+    editForm.category.value = item.category || "";
 
     const select = editForm.querySelector('select[name="is_auction"]');
     if (select) {
@@ -261,7 +276,15 @@ async function editItem(id) {
       toggleAuctionDurationVisibility(select, editForm);
     }
 
-    if (editModal) editModal.style.display = "flex";
+    // If it's an auction, set the duration
+    if (item.is_auction && item.auction_duration) {
+      const durationSelect = editForm.querySelector('select[name="auction_duration"]');
+      if (durationSelect) {
+        durationSelect.value = item.auction_duration;
+      }
+    }
+
+    editModal.style.display = "flex";
   } catch (err) {
     console.error('Error in editItem:', err);
     alert("Failed to load item for editing.");
@@ -274,24 +297,37 @@ async function editItem(id) {
 editForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const id = editForm.dataset.itemId;
+  console.log('=== EDIT FORM SUBMIT ===');
   
+  const id = editForm.dataset.itemId;
+  console.log('ID from dataset:', id);
+
   if (!id) {
-    alert("Item ID is missing. Please close and reopen the edit form.");
+    alert("Item ID is missing. Please try again.");
     return;
   }
 
   // Get form values
-  const title = editForm.querySelector('input[name="title"]').value;
-  const description = editForm.querySelector('textarea[name="description"]').value;
-  const starting_price = editForm.querySelector('input[name="starting_price"]').value;
-  const category = editForm.querySelector('select[name="category"]').value;
-  const is_auction = editForm.querySelector('select[name="is_auction"]').value;
+  const title = editForm.title.value;
+  const description = editForm.description.value;
+  const starting_price = editForm.starting_price.value;
+  const category = editForm.category.value;
+  const is_auction = editForm.is_auction.value;
+  
+  console.log('Form values:', { title, description, starting_price, category, is_auction });
+
+  // Validate required fields
+  if (!title || !description || !starting_price || !category) {
+    alert("Please fill all required fields.");
+    return;
+  }
 
   // Validate auction duration if needed
   let auction_duration = null;
   if (is_auction === "true") {
-    auction_duration = editForm.querySelector('select[name="auction_duration"]').value;
+    auction_duration = editForm.auction_duration.value;
+    console.log('Auction duration:', auction_duration);
+    
     if (!auction_duration) {
       alert("Please select a valid auction duration.");
       return;
@@ -299,11 +335,12 @@ editForm?.addEventListener("submit", async (e) => {
   }
 
   // Check for new image
-  const imageInput = editForm.querySelector('input[name="image"]');
-  const hasNewImage = imageInput && imageInput.files && imageInput.files.length > 0;
+  const imageInput = editForm.image;
+  const hasNewImage = imageInput.files && imageInput.files.length > 0;
+  console.log('Has new image:', hasNewImage);
 
   try {
-    // Build FormData manually
+    // Create FormData
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
@@ -319,12 +356,25 @@ editForm?.addEventListener("submit", async (e) => {
       formData.append('image', imageInput.files[0]);
     }
 
+    console.log('=== SENDING FORMDATA ===');
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`${key}: [File: ${value.name}]`);
+      } else {
+        console.log(`${key}: "${value}"`);
+      }
+    }
+
+    console.log(`Making PATCH request to: /api/items/${id}`);
+    
     await apiFetch(`/api/items/${id}`, {
       method: "PATCH",
       body: formData,
     });
 
-    if (editModal) editModal.style.display = "none";
+    console.log('Update successful');
+    editModal.style.display = "none";
+    editForm.reset();
     await loadListings();
   } catch (err) {
     console.error('Edit form error:', err);
@@ -342,14 +392,20 @@ function toggleAuctionDurationVisibility(select, form) {
   }
 }
 
-document.querySelectorAll('select[name="is_auction"]').forEach((select) => {
-  select.addEventListener("change", () => toggleAuctionDurationVisibility(select, select.closest("form")));
+// Add event listeners for auction type selects
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('select[name="is_auction"]').forEach((select) => {
+    select.addEventListener("change", () => {
+      const form = select.closest("form");
+      toggleAuctionDurationVisibility(select, form);
+    });
+  });
 });
 
 // ==========================
 // PROFILE MODAL
 // ==========================
-openProfileBtn?.addEventListener('click', async () => {
+openProfileBtn.onclick = async () => {
   try {
     const data = await apiFetch("/api/users/me");
 
@@ -358,13 +414,48 @@ openProfileBtn?.addEventListener('click', async () => {
     document.getElementById("profileInstitution").textContent = data.institution || "N/A";
     document.getElementById("profileCreatedAt").textContent = new Date(data.created_at).toLocaleDateString();
 
-    if (profileModal) profileModal.style.display = "flex";
+    profileModal.style.display = "flex";
   } catch (err) {
+    console.error('Profile error:', err);
     alert("Could not load profile information.");
   }
-});
+};
+
+// ==========================
+// TEST ENDPOINTS FUNCTION
+// ==========================
+async function testEndpoints() {
+  console.log('Testing endpoints...');
+  
+  // Test basic connectivity
+  try {
+    const response = await cleanFetch(`${API_BASE_URL}/api/items`);
+    console.log('Basic endpoint test - Status:', response.status);
+  } catch (error) {
+    console.error('Basic endpoint test failed:', error);
+  }
+  
+  // Test authenticated endpoint
+  try {
+    const response = await cleanFetch(`${API_BASE_URL}/api/items/my`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    console.log('Auth endpoint test - Status:', response.status);
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Auth endpoint data:', data);
+    }
+  } catch (error) {
+    console.error('Auth endpoint test failed:', error);
+  }
+}
 
 // ==========================
 // INITIAL LOAD
 // ==========================
+console.log('sellerPage.js loaded');
+testEndpoints();
 loadListings();
