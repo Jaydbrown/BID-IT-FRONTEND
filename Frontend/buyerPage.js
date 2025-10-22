@@ -3,7 +3,7 @@
 // ========================================
 
 // API Base URL
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://bid-it-backend.onrender.com/api';
 
 // Get Auth Token
 const getAuthToken = () => localStorage.getItem('token');
@@ -436,3 +436,4 @@ if (document.getElementById('featuredGrid')) {
     loadProducts(currentFilters);
   }
 }
+
