@@ -1061,4 +1061,399 @@
             <button class="btn btn-primary" onclick="scrollToSection('featured')">
               <i class="fas fa-shopping-cart"></i> Start Shopping
             </button>
-            <button class="btn btn-outline" onclick="show
+            <button class="btn btn-outline" onclick="showToast('Seller registration coming soon!', 'success')">
+              <i class="fas fa-store"></i> Become a Seller
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-images">
+          <img src="https://picsum.photos/200/280?random=1" alt="Student marketplace" />
+          <img src="https://picsum.photos/200/280?random=2" alt="Campus deals" />
+          <img src="https://picsum.photos/200/280?random=3" alt="University items" />
+        </div>
+      </div>
+    </section>
+
+    <!-- VALUE PROPS -->
+    <section class="value-props">
+      <div class="prop">
+        <i class="fas fa-shield-alt"></i>
+        <h4>Verified Sellers</h4>
+        <p>All sellers are verified university students</p>
+      </div>
+      <div class="prop">
+        <i class="fas fa-truck"></i>
+        <h4>Campus Pickup</h4>
+        <p>Fast and convenient on-campus delivery</p>
+      </div>
+      <div class="prop">
+        <i class="fas fa-gavel"></i>
+        <h4>Secure Bidding</h4>
+        <p>Safe and transparent auction system</p>
+      </div>
+      <div class="prop">
+        <i class="fas fa-comments"></i>
+        <h4>Direct Chat</h4>
+        <p>Communicate directly with sellers</p>
+      </div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section id="categories" class="categories">
+      <h2>Shop by Category</h2>
+      <div class="category-grid">
+        <button class="category-chip" onclick="filterByCategory('books')">
+          <i class="fas fa-book"></i> Books
+        </button>
+        <button class="category-chip" onclick="filterByCategory('electronics')">
+          <i class="fas fa-laptop"></i> Electronics
+        </button>
+        <button class="category-chip" onclick="filterByCategory('fashion')">
+          <i class="fas fa-tshirt"></i> Fashion
+        </button>
+        <button class="category-chip" onclick="filterByCategory('furniture')">
+          <i class="fas fa-couch"></i> Furniture
+        </button>
+        <button class="category-chip" onclick="filterByCategory('sports')">
+          <i class="fas fa-basketball-ball"></i> Sports
+        </button>
+      </div>
+    </section>
+
+    <!-- FEATURED SECTION -->
+    <section id="featured" class="featured-section">
+      <div class="section-header">
+        <h2>Featured Picks</h2>
+        <button class="see-more-btn" onclick="showAllProducts('featured')">
+          See more <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+      <div id="featuredGrid" class="product-grid"></div>
+    </section>
+
+    <!-- FLASH SALES -->
+    <section class="flash-sales">
+      <div class="section-header">
+        <h2><i class="fas fa-bolt"></i> Flash Sales</h2>
+        <div class="flash-timer" id="flashTimer">Ends in 05:23:45</div>
+      </div>
+      <div id="flashSalesGrid" class="product-grid"></div>
+    </section>
+
+    <!-- AUCTION ITEMS -->
+    <section class="featured-section">
+      <div class="section-header">
+        <h2>Live Auctions</h2>
+        <button class="see-more-btn" onclick="showAllProducts('auction')">
+          See more <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+      <div id="auctionGrid" class="product-grid"></div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section id="testimonials" class="testimonials">
+      <h2>What Students Say</h2>
+      <div class="testimonial-grid">
+        <div class="testimonial">
+          <p>"Sold my textbooks in hours! The bidding system is intuitive and the campus pickup was super convenient."</p>
+          <footer>— Ajibooski, UNIBEN</footer>
+        </div>
+        <div class="testimonial">
+          <p>"Found amazing deals on electronics. Chatting directly with sellers made everything so easy and trustworthy."</p>
+          <footer>— OgheneMega, FUT Minna</footer>
+        </div>
+        <div class="testimonial">
+          <p>"Best platform for student-to-student sales. Safe, fast, and perfect for campus life!"</p>
+          <footer>— Orobor, ABU Zaria</footer>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEWSLETTER -->
+    <section class="newsletter">
+      <h2>Stay Updated</h2>
+      <p>Get the best campus deals, flash sales, and auction alerts delivered weekly</p>
+      <form class="newsletter-form" onsubmit="handleNewsletterSubmit(event)">
+        <input type="email" placeholder="Enter your email" required />
+        <button type="submit" class="btn">Subscribe</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer id="footer" class="site-footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <h3>BID IT</h3>
+        <p>Nigeria's premier student marketplace. Connecting university students across the nation for safe and convenient buying, selling, and bidding.</p>
+        <div class="social-icons">
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <h4>Quick Links</h4>
+        <a href="#home">Home</a>
+        <a href="#categories">Categories</a>
+        <a href="#featured">Featured</a>
+        <a href="#">Become a Seller</a>
+        <a href="#">Help Center</a>
+      </div>
+
+      <div class="footer-links">
+        <h4>Support</h4>
+        <a href="#">FAQ</a>
+        <a href="#">Shipping Info</a>
+        <a href="#">Returns</a>
+        <a href="#">Contact Us</a>
+        <a href="#">Privacy Policy</a>
+      </div>
+
+      <div class="footer-links">
+        <h4>Contact</h4>
+        <a href="mailto:support@bidit.com"><i class="fas fa-envelope"></i> support@bidit.com</a>
+        <a href="tel:+2348001234567"><i class="fas fa-phone"></i> +234 800 123 4567</a>
+        <a href="#"><i class="fas fa-map-marker-alt"></i> Lagos, Nigeria</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2025 BID IT. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- SEARCH OVERLAY -->
+  <div id="searchOverlay" class="search-overlay">
+    <div class="search-container">
+      <button id="closeSearch">&times;</button>
+      <div class="search-input-wrapper">
+        <input type="search" id="searchInput" placeholder="Search for products..." />
+      </div>
+      <div class="search-suggestions" id="searchSuggestions"></div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script>
+    // INTRO ANIMATION
+    const introText = "BID IT";
+    let introIndex = 0;
+    const introElement = document.getElementById('introText');
+
+    function typeIntro() {
+      if (introIndex < introText.length) {
+        introElement.textContent += introText.charAt(introIndex);
+        introIndex++;
+        setTimeout(typeIntro, 150);
+      } else {
+        setTimeout(() => {
+          document.getElementById('intro').classList.add('fade-out');
+          setTimeout(() => {
+            document.getElementById('intro').style.display = 'none';
+          }, 500);
+        }, 1000);
+      }
+    }
+
+    // HERO SUBTITLE TYPING
+    const heroText = "The Campus Marketplace";
+    let heroIndex = 0;
+    const heroSubtitle = document.getElementById('heroSubtitle');
+
+    function typeHeroSubtitle() {
+      if (heroIndex < heroText.length) {
+        heroSubtitle.textContent += heroText.charAt(heroIndex);
+        heroIndex++;
+        setTimeout(typeHeroSubtitle, 100);
+      }
+    }
+
+    // NAVBAR SCROLL EFFECT
+    window.addEventListener('scroll', () => {
+      const navbar = document.querySelector('.navbar');
+      if (window.scrollY > 50) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+
+    // HAMBURGER MENU
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.add('active');
+    });
+
+    document.querySelector('.closebtn').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.remove('active');
+    });
+
+    // SEARCH OVERLAY
+    document.getElementById('searchIcon').addEventListener('click', () => {
+      document.getElementById('searchOverlay').classList.add('active');
+      document.getElementById('searchInput').focus();
+    });
+
+    document.getElementById('closeSearch').addEventListener('click', () => {
+      document.getElementById('searchOverlay').classList.remove('active');
+    });
+
+    // SAMPLE PRODUCT DATA
+    const sampleProducts = [
+      { id: 1, title: 'Engineering Mathematics Textbook', price: 5500, category: 'books', image: 'https://picsum.photos/300/300?random=10', seller: 'John Doe', university: 'UNIBEN', type: 'featured' },
+      { id: 2, title: 'HP Laptop Core i5', price: 85000, category: 'electronics', image: 'https://picsum.photos/300/300?random=11', seller: 'Jane Smith', university: 'UNILAG', type: 'featured' },
+      { id: 3, title: 'Designer Sneakers', price: 12000, category: 'fashion', image: 'https://picsum.photos/300/300?random=12', seller: 'Mike Johnson', university: 'ABU', type: 'flash' },
+      { id: 4, title: 'Study Desk & Chair', price: 18000, category: 'furniture', image: 'https://picsum.photos/300/300?random=13', seller: 'Sarah Williams', university: 'UI', type: 'featured' },
+      { id: 5, title: 'iPhone 12 Pro', price: 250000, category: 'electronics', image: 'https://picsum.photos/300/300?random=14', seller: 'David Brown', university: 'UNIBEN', type: 'auction' },
+      { id: 6, title: 'Medical Textbook Bundle', price: 25000, category: 'books', image: 'https://picsum.photos/300/300?random=15', seller: 'Emma Davis', university: 'UNILAG', type: 'flash' },
+      { id: 7, title: 'Gaming Console PS5', price: 180000, category: 'electronics', image: 'https://picsum.photos/300/300?random=16', seller: 'Chris Wilson', university: 'ABU', type: 'auction' },
+      { id: 8, title: 'Vintage Denim Jacket', price: 8500, category: 'fashion', image: 'https://picsum.photos/300/300?random=17', seller: 'Olivia Moore', university: 'UI', type: 'featured' },
+    ];
+
+    // RENDER PRODUCTS
+    function renderProducts(products, containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      products.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+          <div class="product-image">
+            <img src="${product.image}" alt="${product.title}" />
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">${product.title}</h3>
+            <div class="product-price">₦${product.price.toLocaleString()}</div>
+            <div class="product-meta">
+              <span><i class="fas fa-user"></i> ${product.seller}</span>
+              <span><i class="fas fa-university"></i> ${product.university}</span>
+            </div>
+            <div class="product-actions">
+              <button class="btn btn-primary" onclick="showToast('Added to cart!', 'success')">
+                <i class="fas fa-shopping-cart"></i> Add to Cart
+              </button>
+              <button class="btn btn-outline" onclick="showToast('Added to wishlist!', 'success')">
+                <i class="fas fa-heart"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // FILTER BY CATEGORY
+    function filterByCategory(category) {
+      showToast(`Showing ${category} items`, 'success');
+      const filtered = sampleProducts.filter(p => p.category === category);
+      renderProducts(filtered, 'featuredGrid');
+      scrollToSection('featured');
+    }
+
+    // SHOW ALL PRODUCTS
+    function showAllProducts(type) {
+      showToast(`Loading all ${type} items...`, 'success');
+    }
+
+    // TOAST NOTIFICATIONS
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        ${message}
+      `;
+      container.appendChild(toast);
+
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // NEWSLETTER SUBMIT
+    function handleNewsletterSubmit(event) {
+      event.preventDefault();
+      showToast('Successfully subscribed to newsletter!', 'success');
+      event.target.reset();
+    }
+
+    // SCROLL FUNCTIONS
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function scrollToSection(sectionId) {
+      document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // FLASH SALE TIMER
+    function updateFlashTimer() {
+      const timer = document.getElementById('flashTimer');
+      let hours = 5, minutes = 23, seconds = 45;
+
+      setInterval(() => {
+        seconds--;
+        if (seconds < 0) {
+          seconds = 59;
+          minutes--;
+        }
+        if (minutes < 0) {
+          minutes = 59;
+          hours--;
+        }
+        if (hours < 0) {
+          hours = 0;
+          minutes = 0;
+          seconds = 0;
+        }
+
+        timer.textContent = `Ends in ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    // INITIALIZE
+    window.addEventListener('load', () => {
+      typeIntro();
+      setTimeout(() => {
+        typeHeroSubtitle();
+        renderProducts(sampleProducts.filter(p => p.type === 'featured'), 'featuredGrid');
+        renderProducts(sampleProducts.filter(p => p.type === 'flash'), 'flashSalesGrid');
+        renderProducts(sampleProducts.filter(p => p.type === 'auction'), 'auctionGrid');
+        updateFlashTimer();
+      }, 2500);
+    });
+
+    // SEARCH FUNCTIONALITY
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const suggestions = document.getElementById('searchSuggestions');
+
+      if (query.length > 2) {
+        const results = sampleProducts.filter(p =>
+          p.title.toLowerCase().includes(query) ||
+          p.category.toLowerCase().includes(query)
+        );
+
+        suggestions.innerHTML = results.map(p => `
+          <div class="search-suggestion-item" onclick="showToast('Viewing ${p.title}', 'success')">
+            <strong>${p.title}</strong><br>
+            <small>${p.category} • ₦${p.price.toLocaleString()}</small>
+          </div>
+        `).join('');
+      } else {
+        suggestions.innerHTML = '';
+      }
+    });
+  </script>
+</body>
+</html>
