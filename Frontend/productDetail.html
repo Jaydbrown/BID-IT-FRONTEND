@@ -4,208 +4,793 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Product Details | BID IT</title>
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <!-- Core Styles -->
-  <link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
-  <link rel="stylesheet" href="product.css" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: #f7f9fc;
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --secondary: #7209b7;
+      --accent: #f72585;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #ffc107;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray-100: #f8f9fa;
+      --gray-200: #e9ecef;
+      --gray-300: #dee2e6;
+      --gray-400: #ced4da;
+      --gray-600: #6c757d;
+      --gray-800: #343a40;
+      --border-radius: 12px;
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+      --transition: all 0.3s ease;
+    }
+
+    * {
       margin: 0;
       padding: 0;
-      color: #333;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: var(--gray-800);
+      background-color: var(--gray-100);
     }
 
     /* NAVBAR */
     .navbar {
-      background-color: #007BFF;
+      background-color: white;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+      box-shadow: var(--shadow-sm);
+      padding: 1rem 0;
+      height: 80px;
+    }
+
+    .navbar-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      height: 100%;
+    }
+
+    .navbar-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--primary);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .navbar-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .navbar-links a {
+      color: var(--gray-800);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .navbar-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: var(--primary);
+      transition: var(--transition);
+    }
+
+    .navbar-links a:hover::after {
+      width: 100%;
+    }
+
+    #hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 0.75rem;
+      background: var(--gray-100);
+      border-radius: var(--border-radius);
+      transition: var(--transition);
+    }
+
+    .bar {
+      width: 30px;
+      height: 3px;
+      background-color: var(--gray-800);
+      border-radius: 2px;
+      transition: var(--transition);
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      margin-top: 80px;
+      min-height: calc(100vh - 80px);
+      padding: 3rem 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* BREADCRUMB */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+      color: var(--gray-600);
+    }
+
+    .breadcrumb a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    /* PRODUCT SECTION */
+    .product-section {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .product-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      padding: 3rem;
+    }
+
+    /* PRODUCT GALLERY */
+    .product-gallery {
+      position: sticky;
+      top: 100px;
+      height: fit-content;
+    }
+
+    .main-image {
+      width: 100%;
+      height: 500px;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      margin-bottom: 1rem;
+      background: var(--gray-100);
+    }
+
+    .main-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .main-image:hover img {
+      transform: scale(1.05);
+    }
+
+    .thumbnail-gallery {
+      display: flex;
+      gap: 0.75rem;
+      overflow-x: auto;
+    }
+
+    .thumbnail {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: var(--transition);
+    }
+
+    .thumbnail.active,
+    .thumbnail:hover {
+      border-color: var(--primary);
+    }
+
+    .thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* PRODUCT DETAILS */
+    .product-details {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .product-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      color: var(--dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .product-meta {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--gray-600);
+    }
+
+    .meta-item i {
+      color: var(--primary);
+    }
+
+    .product-price {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 1rem 0;
+    }
+
+    .price-label {
+      font-size: 0.9rem;
+      color: var(--gray-600);
+      font-weight: 400;
+    }
+
+    .seller-info {
+      background: var(--gray-100);
+      padding: 1.5rem;
+      border-radius: var(--border-radius);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .seller-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
       color: white;
-      padding: 15px 25px;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .seller-details h4 {
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .seller-details p {
+      color: var(--gray-600);
+      font-size: 0.9rem;
+    }
+
+    .product-description {
+      padding: 1.5rem 0;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .product-description h3 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      font-family: 'Playfair Display', serif;
+    }
+
+    .product-description p {
+      color: var(--gray-600);
+      line-height: 1.8;
+    }
+
+    /* AUCTION SECTION */
+    .auction-section {
+      background: linear-gradient(135deg, #fff3cd, #fff);
+      padding: 1.5rem;
+      border-radius: var(--border-radius);
+      border: 2px solid var(--warning);
+    }
+
+    .auction-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1rem;
     }
 
-    .navbar h2 {
-      font-family: 'Playfair Display', serif;
-      margin: 0;
-      font-size: 24px;
-      letter-spacing: 0.5px;
+    .auction-header h3 {
+      font-size: 1.2rem;
+      color: var(--dark);
     }
 
-    .navbar a {
-      color: white;
-      text-decoration: none;
-      margin: 0 12px;
-      font-weight: 500;
-      transition: opacity 0.3s;
-    }
-
-    .navbar a:hover {
-      opacity: 0.8;
-    }
-
-    /* MAIN CONTAINER */
-    .container {
-      max-width: 1100px;
-      margin: 60px auto;
-      padding: 30px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
-      transition: all 0.3s ease-in-out;
-    }
-
-    .container:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-
-    #productContainer {
-      text-align: center;
-    }
-
-    .product-image {
-      max-width: 350px;
-      margin: 0 auto 20px;
-    }
-
-    .product-image img {
-      width: 100%;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .product-info h3 {
-      margin-bottom: 10px;
-      font-family: 'Playfair Display', serif;
-      font-size: 26px;
-    }
-
-    .product-info p {
-      font-size: 16px;
-      color: #555;
-    }
-
-    .price {
-      color: #007BFF;
+    .auction-timer {
+      background: var(--warning);
+      color: var(--dark);
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
       font-weight: 600;
-      font-size: 20px;
-      margin: 15px 0;
+      font-size: 1rem;
     }
 
-    .buy-btn {
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      padding: 12px 25px;
-      border-radius: 8px;
+    .current-bid {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--warning);
+      margin: 1rem 0;
+    }
+
+    .bid-form {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .bid-form input {
+      flex: 1;
+      padding: 0.875rem;
+      border: 2px solid var(--gray-300);
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+    }
+
+    .bid-form input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .bid-history {
+      margin-top: 1.5rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .bid-history h4 {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      color: var(--gray-600);
+    }
+
+    .bid-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      background: white;
+      border-radius: var(--border-radius);
+      margin-bottom: 0.5rem;
+    }
+
+    .bid-item strong {
+      color: var(--primary);
+    }
+
+    .bid-time {
+      font-size: 0.85rem;
+      color: var(--gray-600);
+    }
+
+    /* ACTION BUTTONS */
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 1rem 2rem;
+      border-radius: var(--border-radius);
+      font-weight: 600;
+      font-size: 1rem;
       cursor: pointer;
-      font-weight: 500;
-      transition: 0.3s;
+      transition: var(--transition);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
     }
 
-    .buy-btn:hover {
-      background-color: #0056b3;
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .btn-outline {
+      background: white;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .btn-outline:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-warning {
+      background: var(--warning);
+      color: var(--dark);
+    }
+
+    .btn-warning:hover {
+      background: #e0a800;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* RELATED PRODUCTS */
+    .related-products {
+      padding: 3rem 2rem;
+    }
+
+    .related-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .related-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .product-card {
+      background: white;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .product-card-image {
+      height: 200px;
+      overflow: hidden;
+      background: var(--gray-200);
+    }
+
+    .product-card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .product-card-info {
+      padding: 1rem;
+    }
+
+    .product-card-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .product-card-price {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 1.2rem;
     }
 
     /* FOOTER */
     .site-footer {
-      background: #101820;
-      color: #fff;
-      padding: 40px 20px;
-      text-align: center;
-      margin-top: 60px;
+      background-color: var(--gray-800);
+      color: white;
+      padding: 3rem 2rem 1rem;
     }
 
-    .site-footer h3 {
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2.5rem;
+      max-width: 1400px;
+      margin: 0 auto 2rem;
+    }
+
+    .footer-brand h3 {
+      color: white;
       font-family: 'Playfair Display', serif;
-      margin-bottom: 10px;
-      font-size: 22px;
+      font-size: 2rem;
+      margin-bottom: 1rem;
     }
 
-    .site-footer a {
-      color: #0dcaf0;
+    .footer-brand p {
+      color: var(--gray-400);
+      line-height: 1.8;
+    }
+
+    .footer-links h4 {
+      color: white;
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+
+    .footer-links a {
+      display: block;
+      color: var(--gray-400);
       text-decoration: none;
-      margin: 0 10px;
-      font-weight: 500;
+      margin-bottom: 0.75rem;
+      transition: var(--transition);
     }
 
-    .site-footer a:hover {
-      text-decoration: underline;
+    .footer-links a:hover {
+      color: var(--primary);
+      padding-left: 0.5rem;
     }
 
     .footer-bottom {
-      margin-top: 20px;
-      font-size: 14px;
-      opacity: 0.8;
+      text-align: center;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      color: var(--gray-500);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* LOADING STATE */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem;
+      color: var(--gray-600);
+    }
+
+    .spinner {
+      border: 4px solid var(--gray-200);
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .product-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .product-gallery {
+        position: static;
+      }
+
+      .main-image {
+        height: 400px;
+      }
     }
 
     @media (max-width: 768px) {
-      .container {
-        margin: 30px 15px;
-        padding: 20px;
+      .navbar-container {
+        padding: 0 1rem;
       }
-      .navbar {
+
+      .navbar-links {
+        display: none;
+      }
+
+      #hamburger {
+        display: flex;
+      }
+
+      .main-content {
+        padding: 2rem 1rem;
+      }
+
+      .product-container {
+        padding: 1.5rem;
+      }
+
+      .product-title {
+        font-size: 2rem;
+      }
+
+      .product-price {
+        font-size: 2rem;
+      }
+
+      .action-buttons {
         flex-direction: column;
-        text-align: center;
       }
-      .navbar h2 {
-        margin-bottom: 10px;
+
+      .btn {
+        width: 100%;
+      }
+
+      .related-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .product-title {
+        font-size: 1.5rem;
+      }
+
+      .main-image {
+        height: 300px;
+      }
+
+      .bid-form {
+        flex-direction: column;
       }
     }
   </style>
 </head>
-
 <body>
-  <!-- Navbar -->
-  <div class="navbar">
-    <h2>BID IT</h2>
-    <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="buyerPage.html">Buyer</a>
-      <a href="sellerPage.html">Seller</a>
-      <a href="help.html">Help</a>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="index.html" class="navbar-brand">BID IT</a>
+      
+      <div id="hamburger">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+
+      <div class="navbar-links">
+        <a href="index.html">Home</a>
+        <a href="buyerPage.html">Browse</a>
+        <a href="sellerPage.html">Sell</a>
+        <a href="help.html">Help</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <div class="container">
+      <!-- BREADCRUMB -->
+      <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="buyerPage.html">Products</a>
+        <i class="fas fa-chevron-right"></i>
+        <span id="breadcrumbCategory">Category</span>
+      </div>
+
+      <!-- PRODUCT SECTION -->
+      <div class="product-section" id="productContainer">
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Loading product details...</p>
+        </div>
+      </div>
+
+      <!-- RELATED PRODUCTS -->
+      <div class="related-products">
+        <div class="related-header">
+          <h2>Related Products</h2>
+          <p style="color: var(--gray-600);">You might also like</p>
+        </div>
+        <div class="related-grid" id="relatedProductsGrid">
+          <!-- Related products will be loaded here -->
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Product Details Section -->
-  <div class="container" id="productContainer">
-    <div class="product-image">
-      <img id="productImage" src="assets/default.jpg" alt="Product Image" />
-    </div>
-    <div class="product-info">
-      <h3 id="productTitle">Loading...</h3>
-      <p id="productDescription">Please wait while we fetch the product details.</p>
-      <p class="price">₦<span id="productPrice">0</span></p>
-      <button id="buyNowBtn" class="buy-btn">Buy Now</button>
-    </div>
-  </div>
-
-  <!-- Footer -->
+  <!-- FOOTER -->
   <footer class="site-footer">
-    <h3>BID IT</h3>
-    <p>Marketplace for Nigerian University Students</p>
-    <div>
-      <a href="index.html">Home</a>
-      <a href="buyerPage.html">Buyer</a>
-      <a href="sellerPage.html">Seller</a>
-      <a href="help.html">Help</a>
+    <div class="footer-content">
+      <div class="footer-brand">
+        <h3>BID IT</h3>
+        <p>Nigeria's premier student marketplace. Connecting university students across the nation for safe and convenient buying, selling, and bidding.</p>
+      </div>
+
+      <div class="footer-links">
+        <h4>Quick Links</h4>
+        <a href="index.html">Home</a>
+        <a href="buyerPage.html">Browse Products</a>
+        <a href="sellerPage.html">Become a Seller</a>
+        <a href="help.html">Help Center</a>
+      </div>
+
+      <div class="footer-links">
+        <h4>Support</h4>
+        <a href="#">FAQ</a>
+        <a href="#">Shipping Info</a>
+        <a href="#">Returns</a>
+        <a href="#">Contact Us</a>
+      </div>
     </div>
+
     <div class="footer-bottom">
       <p>&copy; 2025 BID IT. All rights reserved.</p>
     </div>
   </footer>
 
+  <!-- Toast Container -->
+  <div id="toastContainer" style="position: fixed; top: 100px; right: 2rem; z-index: 4000;"></div>
+
   <!-- Paystack Script -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
-  <script type="module" src="product.js"></script>
+  
+  <script>
+    // Use the main.js functions
+    const API_BASE_URL = 'http://localhost:5000/api';
+    
+    // Get product ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('id');
+
+    if (!productId) {
+      document.getElementById('productContainer').innerHTML = `
+        <div style="text-align: center; padding: 4rem;">
+          <i class="fas fa-exclamation-circle" style="font-size: 4rem; color: var(--danger);"></i>
+          <h3>Product not found</h3>
+          <p>The product you're looking for doesn't exist.</p>
+          <a href="buyerPage.html" class="btn btn-primary" style="display: inline-flex; margin-top: 1rem;">
+            <i class="fas fa-arrow-left"></i> Back to Products
+          </a>
+        </div>
+      `;
+    } else {
+      // This will use the loadProductDetail function from main.js
+      loadProductDetail();
+    }
+  </script>
+  <script src="product.js"></script>
 </body>
 </html>
-
