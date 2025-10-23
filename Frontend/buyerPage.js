@@ -368,15 +368,11 @@ function initLiveSearchOverlay(searchInput) {
     }, 300);
   });
 
-  // Handle Enter key
+  // Remove Enter key redirect - keep search in overlay
   searchInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      const query = searchInput.value.trim();
-      if (query) {
-        // Redirect to buyer page with search query
-        window.location.href = `buyerPage.html?search=${encodeURIComponent(query)}`;
-      }
+      // Just keep showing results in overlay, don't redirect
     }
   });
 }
@@ -1103,12 +1099,125 @@ window.showToast = showToast;
 window.openMobileSearch = openMobileSearch;
 window.showAllProducts = showAllProducts;
 
-// Show All Products Function
+// Show All Products Function - Open Products Overlay
 function showAllProducts(type) {
-  if (type === 'featured' || type === 'auction') {
-    // Just scroll to the section instead of redirecting
-    scrollToSection(type === 'featured' ? 'featured' : 'auctionGrid');
-    showToast('Showing all products in this section', 'success');
+  openProductsOverlay(type);
+}
+
+// Open Products Overlay
+async function openProductsOverlay(type) {
+  // Create overlay if it doesn't exist
+  let overlay = document.getElementById('productsOverlay');
+  
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'productsOverlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 3000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    `;
+    
+    overlay.innerHTML = `
+      <div style="background: white; border-radius: 12px; width: 90%; max-width: 1200px; height: 85vh; display: flex; flex-direction: column; position: relative; overflow: hidden;">
+        <div style="padding: 1.5rem 2rem; border-bottom: 2px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #4361ee, #7209b7);">
+          <h2 id="overlayTitle" style="margin: 0; color: white; font-size: 1.8rem; font-family: 'Playfair Display', serif;"></h2>
+          <button onclick="closeProductsOverlay()" style="background: none; border: none; font-size: 2rem; cursor: pointer; color: white; padding: 0.5rem; line-height: 1;">&times;</button>
+        </div>
+        <div id="overlayProductsContainer" style="flex: 1; overflow-y: auto; padding: 2rem;">
+          <div id="overlayProductsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem;"></div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        closeProductsOverlay();
+      }
+    });
+  }
+  
+  // Show overlay
+  overlay.style.opacity = '1';
+  overlay.style.visibility = 'visible';
+  document.body.style.overflow = 'hidden';
+  
+  // Set title
+  const titleEl = document.getElementById('overlayTitle');
+  if (type === 'featured') {
+    titleEl.innerHTML = '<i class="fas fa-star"></i> All Featured Products';
+  } else if (type === 'auction') {
+    titleEl.innerHTML = '<i class="fas fa-gavel"></i> All Live Auctions';
+  }
+  
+  // Load products
+  const container = document.getElementById('overlayProductsGrid');
+  container.innerHTML = '<p style="text-align: center; padding: 2rem; grid-column: 1/-1;"><i class="fas fa-spinner fa-spin"></i> Loading products...</p>';
+  
+  try {
+    const queryParams = new URLSearchParams();
+    if (currentFilters.university) queryParams.append('university', currentFilters.university);
+    if (currentFilters.category) queryParams.append('category', currentFilters.category);
+    if (type === 'auction') queryParams.append('is_auction', 'true');
+    queryParams.append('limit', '50');
+    
+    const response = await cleanFetch(`${API_BASE_URL}/items?${queryParams}`);
+    if (!response.ok) throw new Error('Failed to fetch');
+    
+    const items = await response.json();
+    
+    if (items.length > 0) {
+      container.innerHTML = items.map(item => {
+        const imageUrl = item.image_url 
+          ? `https://bid-it-backend.onrender.com${item.image_url}` 
+          : 'https://via.placeholder.com/220x220?text=Product';
+        
+        return `
+          <div onclick="viewProduct(${item.id})" style="cursor: pointer; border: 1px solid #e0e0e0; border-radius: 12px; padding: 1rem; transition: all 0.3s ease; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin-bottom: 0.75rem;">
+              <img src="${imageUrl}" alt="${item.title}" 
+                   style="width: 100%; height: 100%; object-fit: cover;"
+                   onerror="this.src='https://via.placeholder.com/220x220?text=No+Image'" />
+            </div>
+            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: #333; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.title}</h4>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">${item.category || 'Product'}</p>
+            <p style="font-size: 1.2rem; color: #4361ee; font-weight: bold; margin-bottom: 0.5rem;">${formatCurrency(item.starting_price)}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #888;">
+              <span><i class="fas fa-user"></i> ${item.seller_username || 'Seller'}</span>
+              <span><i class="fas fa-university"></i> ${item.university || 'N/A'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      container.innerHTML = '<p style="text-align: center; padding: 3rem; color: #666; grid-column: 1/-1;">No products available in this section.</p>';
+    }
+  } catch (error) {
+    console.error('Error loading overlay products:', error);
+    container.innerHTML = '<p style="text-align: center; padding: 3rem; color: #dc3545; grid-column: 1/-1;">Failed to load products. Please try again.</p>';
+  }
+}
+
+// Close Products Overlay
+function closeProductsOverlay() {
+  const overlay = document.getElementById('productsOverlay');
+  if (overlay) {
+    overlay.style.opacity = '0';
+    overlay.style.visibility = 'hidden';
+    document.body.style.overflow = '';
   }
 }
 
