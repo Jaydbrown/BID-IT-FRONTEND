@@ -255,7 +255,7 @@ function initHamburgerMenu() {
   }
 }
 
-// Search Overlay
+// Search Overlay - Enhanced for Live Search
 function initSearchOverlay() {
   const searchIcon = document.getElementById('searchIcon');
   const searchOverlay = document.getElementById('searchOverlay');
@@ -272,13 +272,111 @@ function initSearchOverlay() {
   if (closeSearch && searchOverlay) {
     closeSearch.addEventListener('click', () => {
       searchOverlay.classList.remove('active');
+      if (searchInput) searchInput.value = '';
+      // Clear live search results
+      const resultsContainer = document.getElementById('liveSearchResults');
+      if (resultsContainer) resultsContainer.innerHTML = '';
     });
+  }
+
+  // Initialize live search in overlay
+  if (searchInput) {
+    initLiveSearchOverlay(searchInput);
   }
 
   // Close on escape key
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && searchOverlay) {
       searchOverlay.classList.remove('active');
+      if (searchInput) searchInput.value = '';
+    }
+  });
+}
+
+// Live Search in Overlay
+function initLiveSearchOverlay(searchInput) {
+  let searchTimeout;
+  
+  // Create results container if it doesn't exist
+  let resultsContainer = document.getElementById('liveSearchResults');
+  if (!resultsContainer) {
+    resultsContainer = document.createElement('div');
+    resultsContainer.id = 'liveSearchResults';
+    resultsContainer.style.cssText = `
+      max-width: 800px;
+      margin: 2rem auto;
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-height: 60vh;
+      overflow-y: auto;
+      display: none;
+    `;
+    searchInput.parentElement.appendChild(resultsContainer);
+  }
+
+  searchInput.addEventListener('input', async (e) => {
+    clearTimeout(searchTimeout);
+    const query = e.target.value.trim();
+    
+    if (query.length < 2) {
+      resultsContainer.innerHTML = '';
+      resultsContainer.style.display = 'none';
+      return;
+    }
+
+    resultsContainer.innerHTML = '<p style="text-align: center; padding: 1rem;"><i class="fas fa-spinner fa-spin"></i> Searching...</p>';
+    resultsContainer.style.display = 'block';
+
+    searchTimeout = setTimeout(async () => {
+      try {
+        const response = await cleanFetch(`${API_BASE_URL}/items?search=${encodeURIComponent(query)}&limit=10`);
+        
+        if (!response.ok) throw new Error('Search failed');
+        
+        const items = await response.json();
+        
+        if (items.length > 0) {
+          resultsContainer.innerHTML = `
+            <h3 style="margin-bottom: 1rem; color: #333;">Search Results (${items.length})</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;">
+              ${items.map(item => {
+                const imageUrl = item.image_url 
+                  ? `https://bid-it-backend.onrender.com${item.image_url}` 
+                  : 'https://via.placeholder.com/180x180?text=Product';
+                
+                return `
+                  <div onclick="viewProduct(${item.id})" style="cursor: pointer; border: 1px solid #e0e0e0; border-radius: 8px; padding: 0.75rem; transition: all 0.3s ease; background: white;">
+                    <img src="${imageUrl}" alt="${item.title}" 
+                         style="width: 100%; height: 150px; object-fit: cover; border-radius: 6px; margin-bottom: 0.5rem;"
+                         onerror="this.src='https://via.placeholder.com/180x180?text=No+Image'" />
+                    <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem; color: #333; font-weight: 600;">${item.title}</h4>
+                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">${item.category || 'Product'}</p>
+                    <p style="font-size: 1rem; color: #007bff; font-weight: bold;">${formatCurrency(item.starting_price)}</p>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        } else {
+          resultsContainer.innerHTML = '<p style="text-align: center; padding: 2rem; color: #666;">No products found matching your search.</p>';
+        }
+      } catch (error) {
+        console.error('Live search error:', error);
+        resultsContainer.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc3545;">Search failed. Please try again.</p>';
+      }
+    }, 300);
+  });
+
+  // Handle Enter key
+  searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const query = searchInput.value.trim();
+      if (query) {
+        // Redirect to buyer page with search query
+        window.location.href = `buyerPage.html?search=${encodeURIComponent(query)}`;
+      }
     }
   });
 }
@@ -335,14 +433,13 @@ function initMobileUniversityFilter() {
       if (mobileSelect) {
         mobileSelect.addEventListener('change', (e) => {
           const university = e.target.value;
-          if (window.location.pathname.includes('index.html')) {
-            currentFilters.university = university;
-            loadProducts(currentFilters);
-            sidebar.classList.remove('active');
-            document.body.style.overflow = '';
-          } else if (university) {
-            window.location.href = `index.html?university=${university}`;
+          if (university) {
+            window.location.href = `buyerPage.html?university=${university}`;
+          } else {
+            window.location.href = 'buyerPage.html';
           }
+          sidebar.classList.remove('active');
+          document.body.style.overflow = '';
         });
       }
     }
@@ -389,7 +486,7 @@ function viewProduct(productId) {
   window.location.href = `productDetail.html?id=${productId}`;
 }
 
-// Filter by Category
+// Filter by Category - Redirect to buyer page
 function filterByCategory(category) {
   window.location.href = `buyerPage.html?category=${category}`;
 }
@@ -669,35 +766,17 @@ function initQuickSearch() {
 
       searchTimeout = setTimeout(async () => {
         try {
-          const response = await cleanFetch(`${API_BASE_URL}/search?query=${encodeURIComponent(query)}`);
+          const response = await cleanFetch(`${API_BASE_URL}/items?search=${encodeURIComponent(query)}&limit=5`);
           
-          if (!response.ok) {
-            // Fallback to regular items search
-            const fallbackResponse = await cleanFetch(`${API_BASE_URL}/items?search=${encodeURIComponent(query)}&limit=5`);
-            const items = await fallbackResponse.json();
-            
-            if (items.length > 0) {
-              searchResults.innerHTML = items.map(item => `
-                <li role="option" onclick="selectSearchItem(${item.id})" style="cursor: pointer; padding: 0.75rem;">
-                  <strong>${item.title}</strong><br>
-                  <small>${item.category} • ${formatCurrency(item.starting_price)}</small>
-                </li>
-              `).join('');
-              searchResults.style.display = 'block';
-            } else {
-              searchResults.innerHTML = '<li style="padding: 0.75rem;">No results found</li>';
-              searchResults.style.display = 'block';
-            }
-            return;
-          }
+          if (!response.ok) throw new Error('Search failed');
           
-          const data = await response.json();
+          const items = await response.json();
           
-          if (data.suggestions && data.suggestions.length > 0) {
-            searchResults.innerHTML = data.suggestions.map(item => `
+          if (items.length > 0) {
+            searchResults.innerHTML = items.map(item => `
               <li role="option" onclick="selectSearchItem(${item.id})" style="cursor: pointer; padding: 0.75rem;">
                 <strong>${item.title}</strong><br>
-                <small>${item.category} • ${formatCurrency(item.price || item.starting_price)}</small>
+                <small>${item.category} • ${formatCurrency(item.starting_price)}</small>
               </li>
             `).join('');
             searchResults.style.display = 'block';
@@ -709,6 +788,19 @@ function initQuickSearch() {
           console.error('Search error:', error);
         }
       }, 300);
+    });
+
+    // Handle Enter key
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const query = searchInput.value.trim();
+        if (query) {
+          currentFilters.search = query;
+          loadProducts(currentFilters);
+          searchResults.style.display = 'none';
+        }
+      }
     });
   }
 
@@ -824,29 +916,27 @@ function initBuyerPage() {
   initQuickSearch();
   initUniversityFilter();
   initCategoryFilter();
-  loadProducts(currentFilters);
-  loadRecentlyViewed();
   
   // Check URL params
   const urlParams = new URLSearchParams(window.location.search);
   const category = urlParams.get('category');
   const university = urlParams.get('university');
+  const search = urlParams.get('search');
   
-  if (category) {
-    currentFilters.category = category;
-    loadProducts(currentFilters);
-  }
+  if (category) currentFilters.category = category;
+  if (university) currentFilters.university = university;
+  if (search) currentFilters.search = search;
   
+  // Set select values
   if (university) {
-    currentFilters.university = university;
-    loadProducts(currentFilters);
-    
-    // Set select values
     const universitySelect = document.getElementById('universitySelect');
     const mobileUniversitySelect = document.getElementById('mobileUniversitySelect');
     if (universitySelect) universitySelect.value = university;
     if (mobileUniversitySelect) mobileUniversitySelect.value = university;
   }
+  
+  loadProducts(currentFilters);
+  loadRecentlyViewed();
 }
 
 // ==========================
@@ -876,6 +966,10 @@ function initializePage() {
   } else if (filename === 'cart.html') {
     // Cart initialization is in cart.js
     console.log('Cart page detected');
+  } else if (filename === 'login.html') {
+    console.log('Login page detected');
+  } else if (filename === 'signup.html') {
+    console.log('Signup page detected');
   }
 
   // Check authentication status
@@ -932,4 +1026,3 @@ window.showToast = showToast;
 window.openMobileSearch = openMobileSearch;
 
 console.log('BID IT Main JavaScript Loaded Successfully');
-
