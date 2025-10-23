@@ -335,13 +335,13 @@ function initMobileUniversityFilter() {
       if (mobileSelect) {
         mobileSelect.addEventListener('change', (e) => {
           const university = e.target.value;
-          if (window.location.pathname.includes('buyerPage.html')) {
+          if (window.location.pathname.includes('index.html')) {
             currentFilters.university = university;
             loadProducts(currentFilters);
             sidebar.classList.remove('active');
             document.body.style.overflow = '';
           } else if (university) {
-            window.location.href = `buyerPage.html?university=${university}`;
+            window.location.href = `index.html?university=${university}`;
           }
         });
       }
@@ -932,3 +932,4 @@ window.showToast = showToast;
 window.openMobileSearch = openMobileSearch;
 
 console.log('BID IT Main JavaScript Loaded Successfully');
+
