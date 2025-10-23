@@ -985,10 +985,37 @@
 
       .navbar-container {
         padding: 0 1rem;
+        gap: 1rem;
       }
 
       .navbar-brand {
         font-size: 1.5rem;
+        flex: 1;
+      }
+
+      .navbar-links {
+        display: none;
+      }
+
+      .navbar-actions {
+        gap: 0.5rem;
+      }
+
+      #hamburger {
+        display: flex;
+        order: -1;
+      }
+
+      /* Hide search icon and university select on mobile */
+      #searchIcon,
+      .university-select {
+        display: none !important;
+      }
+
+      .cart-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .main-content {
@@ -1702,5 +1729,219 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <script src="buyerPage.js"></script>
+  <script>
+    // INTRO ANIMATION
+    const introText = "BID IT";
+    let introIndex = 0;
+    const introElement = document.getElementById('introText');
+
+    function typeIntro() {
+      if (introIndex < introText.length) {
+        introElement.textContent += introText.charAt(introIndex);
+        introIndex++;
+        setTimeout(typeIntro, 150);
+      } else {
+        setTimeout(() => {
+          document.getElementById('intro').classList.add('fade-out');
+          setTimeout(() => {
+            document.getElementById('intro').style.display = 'none';
+          }, 500);
+        }, 1000);
+      }
+    }
+
+    // HERO SUBTITLE TYPING
+    const heroText = "The Campus Marketplace";
+    let heroIndex = 0;
+    const heroSubtitle = document.getElementById('heroSubtitle');
+
+    function typeHeroSubtitle() {
+      if (heroIndex < heroText.length) {
+        heroSubtitle.textContent += heroText.charAt(heroIndex);
+        heroIndex++;
+        setTimeout(typeHeroSubtitle, 100);
+      }
+    }
+
+    // NAVBAR SCROLL EFFECT
+    window.addEventListener('scroll', () => {
+      const navbar = document.querySelector('.navbar');
+      if (window.scrollY > 50) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+
+    // HAMBURGER MENU
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.add('active');
+    });
+
+    document.querySelector('.closebtn').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.remove('active');
+    });
+
+    // SEARCH OVERLAY
+    document.getElementById('searchIcon').addEventListener('click', () => {
+      document.getElementById('searchOverlay').classList.add('active');
+      document.getElementById('searchInput').focus();
+    });
+
+    document.getElementById('closeSearch').addEventListener('click', () => {
+      document.getElementById('searchOverlay').classList.remove('active');
+    });
+
+    // SAMPLE PRODUCT DATA
+    const sampleProducts = [
+      { id: 1, title: 'Engineering Mathematics Textbook', price: 5500, category: 'books', image: 'https://picsum.photos/300/300?random=10', seller: 'John Doe', university: 'UNIBEN', type: 'featured' },
+      { id: 2, title: 'HP Laptop Core i5', price: 85000, category: 'electronics', image: 'https://picsum.photos/300/300?random=11', seller: 'Jane Smith', university: 'UNILAG', type: 'featured' },
+      { id: 3, title: 'Designer Sneakers', price: 12000, category: 'fashion', image: 'https://picsum.photos/300/300?random=12', seller: 'Mike Johnson', university: 'ABU', type: 'flash' },
+      { id: 4, title: 'Study Desk & Chair', price: 18000, category: 'furniture', image: 'https://picsum.photos/300/300?random=13', seller: 'Sarah Williams', university: 'UI', type: 'featured' },
+      { id: 5, title: 'iPhone 12 Pro', price: 250000, category: 'electronics', image: 'https://picsum.photos/300/300?random=14', seller: 'David Brown', university: 'UNIBEN', type: 'auction' },
+      { id: 6, title: 'Medical Textbook Bundle', price: 25000, category: 'books', image: 'https://picsum.photos/300/300?random=15', seller: 'Emma Davis', university: 'UNILAG', type: 'flash' },
+      { id: 7, title: 'Gaming Console PS5', price: 180000, category: 'electronics', image: 'https://picsum.photos/300/300?random=16', seller: 'Chris Wilson', university: 'ABU', type: 'auction' },
+      { id: 8, title: 'Vintage Denim Jacket', price: 8500, category: 'fashion', image: 'https://picsum.photos/300/300?random=17', seller: 'Olivia Moore', university: 'UI', type: 'featured' },
+    ];
+
+    // RENDER PRODUCTS
+    function renderProducts(products, containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      products.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+          <div class="product-image">
+            <img src="${product.image}" alt="${product.title}" />
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">${product.title}</h3>
+            <div class="product-price">₦${product.price.toLocaleString()}</div>
+            <div class="product-meta">
+              <span><i class="fas fa-user"></i> ${product.seller}</span>
+              <span><i class="fas fa-university"></i> ${product.university}</span>
+            </div>
+            <div class="product-actions">
+              <button class="btn btn-primary" onclick="showToast('Added to cart!', 'success')">
+                <i class="fas fa-shopping-cart"></i> Add to Cart
+              </button>
+              <button class="btn btn-outline" onclick="showToast('Added to wishlist!', 'success')">
+                <i class="fas fa-heart"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // FILTER BY CATEGORY
+    function filterByCategory(category) {
+      showToast(`Showing ${category} items`, 'success');
+      const filtered = sampleProducts.filter(p => p.category === category);
+      renderProducts(filtered, 'featuredGrid');
+      scrollToSection('featured');
+    }
+
+    // SHOW ALL PRODUCTS
+    function showAllProducts(type) {
+      showToast(`Loading all ${type} items...`, 'success');
+    }
+
+    // TOAST NOTIFICATIONS
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        ${message}
+      `;
+      container.appendChild(toast);
+
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // NEWSLETTER SUBMIT
+    function handleNewsletterSubmit(event) {
+      event.preventDefault();
+      showToast('Successfully subscribed to newsletter!', 'success');
+      event.target.reset();
+    }
+
+    // SCROLL FUNCTIONS
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function scrollToSection(sectionId) {
+      document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // FLASH SALE TIMER
+    function updateFlashTimer() {
+      const timer = document.getElementById('flashTimer');
+      let hours = 5, minutes = 23, seconds = 45;
+
+      setInterval(() => {
+        seconds--;
+        if (seconds < 0) {
+          seconds = 59;
+          minutes--;
+        }
+        if (minutes < 0) {
+          minutes = 59;
+          hours--;
+        }
+        if (hours < 0) {
+          hours = 0;
+          minutes = 0;
+          seconds = 0;
+        }
+
+        timer.textContent = `Ends in ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    // INITIALIZE
+    window.addEventListener('load', () => {
+      typeIntro();
+      setTimeout(() => {
+        typeHeroSubtitle();
+        renderProducts(sampleProducts.filter(p => p.type === 'featured'), 'featuredGrid');
+        renderProducts(sampleProducts.filter(p => p.type === 'flash'), 'flashSalesGrid');
+        renderProducts(sampleProducts.filter(p => p.type === 'auction'), 'auctionGrid');
+        updateFlashTimer();
+      }, 2500);
+    });
+
+    // SEARCH FUNCTIONALITY
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const suggestions = document.getElementById('searchSuggestions');
+
+      if (query.length > 2) {
+        const results = sampleProducts.filter(p =>
+          p.title.toLowerCase().includes(query) ||
+          p.category.toLowerCase().includes(query)
+        );
+
+        suggestions.innerHTML = results.map(p => `
+          <div class="search-suggestion-item" onclick="showToast('Viewing ${p.title}', 'success')">
+            <strong>${p.title}</strong><br>
+            <small>${p.category} • ₦${p.price.toLocaleString()}</small>
+          </div>
+        `).join('');
+      } else {
+        suggestions.innerHTML = '';
+      }
+    });
+  </script>
 </body>
 </html>
