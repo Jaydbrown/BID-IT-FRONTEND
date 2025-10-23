@@ -290,39 +290,80 @@ function initMobileUniversityFilter() {
 
   // Check if we're on mobile
   if (window.innerWidth <= 768) {
-    // Check if filter already exists
-    if (!sidebar.querySelector('.mobile-university-filter')) {
-      const filterHTML = `
-        <div class="mobile-university-filter" style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem;">
-          <select id="mobileUniversitySelect" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #dee2e6; background: white; font-size: 0.9rem;">
-            <option value="">All Universities</option>
-            <option value="uniben">University of Benin</option>
-            <option value="unilag">University of Lagos</option>
-            <option value="abu">Ahmadu Bello University</option>
-            <option value="ui">University of Ibadan</option>
-            <option value="unn">University of Nigeria</option>
-            <option value="unijos">University of Jos</option>
-            <option value="futminna">FUT Minna</option>
-          </select>
-        </div>
-      `;
+    // Remove existing filters if they exist
+    const existingFilter = sidebar.querySelector('.mobile-university-filter');
+    const existingSearch = sidebar.querySelector('.mobile-search-filter');
+    
+    if (existingFilter) existingFilter.remove();
+    if (existingSearch) existingSearch.remove();
+
+    // Add search button in sidebar
+    const searchHTML = `
+      <div class="mobile-search-filter" style="padding: 0; margin-bottom: 0.5rem;">
+        <a href="#" onclick="event.preventDefault(); openMobileSearch();" style="display: flex; align-items: center; gap: 1rem; padding: 1.25rem 0; font-weight: 500; border-bottom: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease; color: rgba(255,255,255,0.8); font-size: 1.1rem;">
+          <i class="fas fa-search" style="width: 24px; text-align: center;"></i>
+          <span>Search Products</span>
+        </a>
+      </div>
+    `;
+
+    // Add university filter
+    const filterHTML = `
+      <div class="mobile-university-filter" style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 0.5rem;">
+        <label style="color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Select University</label>
+        <select id="mobileUniversitySelect" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #dee2e6; background: white; font-size: 0.9rem;">
+          <option value="">All Universities</option>
+          <option value="uniben">University of Benin</option>
+          <option value="unilag">University of Lagos</option>
+          <option value="abu">Ahmadu Bello University</option>
+          <option value="ui">University of Ibadan</option>
+          <option value="unn">University of Nigeria</option>
+          <option value="unijos">University of Jos</option>
+          <option value="futminna">FUT Minna</option>
+        </select>
+      </div>
+    `;
+    
+    // Insert after close button
+    const closeBtn = sidebar.querySelector('.closebtn');
+    if (closeBtn) {
+      closeBtn.insertAdjacentHTML('afterend', searchHTML);
+      closeBtn.insertAdjacentHTML('afterend', filterHTML);
       
-      // Insert after close button
-      const closeBtn = sidebar.querySelector('.closebtn');
-      if (closeBtn) {
-        closeBtn.insertAdjacentHTML('afterend', filterHTML);
-        
-        // Add event listener
-        const mobileSelect = document.getElementById('mobileUniversitySelect');
-        if (mobileSelect) {
-          mobileSelect.addEventListener('change', (e) => {
-            const university = e.target.value;
-            if (university) {
-              window.location.href = `buyerPage.html?university=${university}`;
-            }
-          });
-        }
+      // Add event listener for university filter
+      const mobileSelect = document.getElementById('mobileUniversitySelect');
+      if (mobileSelect) {
+        mobileSelect.addEventListener('change', (e) => {
+          const university = e.target.value;
+          if (window.location.pathname.includes('buyerPage.html')) {
+            currentFilters.university = university;
+            loadProducts(currentFilters);
+            sidebar.classList.remove('active');
+            document.body.style.overflow = '';
+          } else if (university) {
+            window.location.href = `buyerPage.html?university=${university}`;
+          }
+        });
       }
+    }
+  }
+}
+
+// Open mobile search
+function openMobileSearch() {
+  const searchOverlay = document.getElementById('searchOverlay');
+  const sidebar = document.getElementById('sidebar') || document.getElementById('mySidebar');
+  
+  if (sidebar) {
+    sidebar.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  
+  if (searchOverlay) {
+    searchOverlay.classList.add('active');
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      setTimeout(() => searchInput.focus(), 300);
     }
   }
 }
@@ -888,5 +929,6 @@ window.scrollToSection = scrollToSection;
 window.handleNewsletterSubmit = handleNewsletterSubmit;
 window.selectSearchItem = selectSearchItem;
 window.showToast = showToast;
+window.openMobileSearch = openMobileSearch;
 
 console.log('BID IT Main JavaScript Loaded Successfully');
