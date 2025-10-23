@@ -446,6 +446,27 @@ function initMobileUniversityFilter() {
   }
 }
 
+// Initialize Desktop University Filter
+function initDesktopUniversityFilter() {
+  const universitySelect = document.getElementById('universitySelect');
+  
+  if (universitySelect) {
+    // Remove any existing listeners
+    const newSelect = universitySelect.cloneNode(true);
+    universitySelect.parentNode.replaceChild(newSelect, universitySelect);
+    
+    // Add new listener
+    newSelect.addEventListener('change', (e) => {
+      const university = e.target.value;
+      if (university) {
+        window.location.href = `buyerPage.html?university=${university}`;
+      } else {
+        window.location.href = 'buyerPage.html';
+      }
+    });
+  }
+}
+
 // Open mobile search
 function openMobileSearch() {
   const searchOverlay = document.getElementById('searchOverlay');
@@ -486,9 +507,19 @@ function viewProduct(productId) {
   window.location.href = `productDetail.html?id=${productId}`;
 }
 
-// Filter by Category - Redirect to buyer page
+// Filter by Category - Scroll to section on index, redirect on other pages
 function filterByCategory(category) {
-  window.location.href = `buyerPage.html?category=${category}`;
+  const path = window.location.pathname;
+  const filename = path.split('/').pop() || 'index.html';
+  
+  // If on index.html, filter and scroll to featured section
+  if (filename === 'index.html' || filename === '') {
+    currentFilters.category = category;
+    loadFeaturedProducts();
+    loadAuctions();
+    showToast(`Filtering by ${category}`, 'success');
+    scrollToSection('featured');
+  }
 }
 
 // Render Products
@@ -575,7 +606,12 @@ async function addToWishlist(productId) {
 // Load Featured Products
 async function loadFeaturedProducts() {
   try {
-    const response = await cleanFetch(`${API_BASE_URL}/items?limit=8`);
+    const queryParams = new URLSearchParams();
+    if (currentFilters.university) {
+      queryParams.append('university', currentFilters.university);
+    }
+    
+    const response = await cleanFetch(`${API_BASE_URL}/items?${queryParams}&limit=8`);
     if (!response.ok) throw new Error('Failed to fetch');
     
     const items = await response.json();
@@ -592,10 +628,15 @@ async function loadFeaturedProducts() {
 // Load Flash Sales
 async function loadFlashSales() {
   try {
-    const response = await cleanFetch(`${API_BASE_URL}/flash-sales`);
+    const queryParams = new URLSearchParams();
+    if (currentFilters.university) {
+      queryParams.append('university', currentFilters.university);
+    }
+    
+    const response = await cleanFetch(`${API_BASE_URL}/flash-sales?${queryParams}`);
     if (!response.ok) {
       // Fallback to regular products if flash sales endpoint doesn't exist
-      const fallbackResponse = await cleanFetch(`${API_BASE_URL}/items?limit=4`);
+      const fallbackResponse = await cleanFetch(`${API_BASE_URL}/items?${queryParams}&limit=4`);
       const items = await fallbackResponse.json();
       renderProducts(items, 'flashSalesGrid');
       return;
@@ -611,7 +652,14 @@ async function loadFlashSales() {
 // Load Auctions
 async function loadAuctions() {
   try {
-    const response = await cleanFetch(`${API_BASE_URL}/items?is_auction=true&limit=8`);
+    const queryParams = new URLSearchParams();
+    if (currentFilters.university) {
+      queryParams.append('university', currentFilters.university);
+    }
+    queryParams.append('is_auction', 'true');
+    queryParams.append('limit', '8');
+    
+    const response = await cleanFetch(`${API_BASE_URL}/items?${queryParams}`);
     if (!response.ok) throw new Error('Failed to fetch');
     
     const items = await response.json();
@@ -682,6 +730,30 @@ function initIndexPage() {
   console.log('Initializing index page...');
   
   initIntroAnimation();
+  initDesktopUniversityFilter();
+  
+  // Add Become a Seller button functionality
+  const becomeSellerButtons = document.querySelectorAll('.btn-outline');
+  becomeSellerButtons.forEach(button => {
+    const buttonText = button.textContent.toLowerCase();
+    if (buttonText.includes('become a seller')) {
+      button.onclick = () => {
+        window.location.href = 'signup.html';
+      };
+    }
+  });
+  
+  // Add sidebar "Become a Seller" link functionality
+  const sidebarLinks = document.querySelectorAll('#sidebar a');
+  sidebarLinks.forEach(link => {
+    const linkText = link.textContent.toLowerCase();
+    if (linkText.includes('become a seller')) {
+      link.onclick = (e) => {
+        e.preventDefault();
+        window.location.href = 'signup.html';
+      };
+    }
+  });
   
   setTimeout(() => {
     initHeroTyping();
@@ -963,13 +1035,18 @@ function initializePage() {
   } else if (filename === 'productDetail.html') {
     // Product detail initialization is in product.js
     console.log('Product detail page detected');
+    initDesktopUniversityFilter();
   } else if (filename === 'cart.html') {
     // Cart initialization is in cart.js
     console.log('Cart page detected');
+    initDesktopUniversityFilter();
   } else if (filename === 'login.html') {
     console.log('Login page detected');
   } else if (filename === 'signup.html') {
     console.log('Signup page detected');
+  } else {
+    // For any other page, still initialize university filter
+    initDesktopUniversityFilter();
   }
 
   // Check authentication status
@@ -1024,5 +1101,15 @@ window.handleNewsletterSubmit = handleNewsletterSubmit;
 window.selectSearchItem = selectSearchItem;
 window.showToast = showToast;
 window.openMobileSearch = openMobileSearch;
+window.showAllProducts = showAllProducts;
+
+// Show All Products Function
+function showAllProducts(type) {
+  if (type === 'featured' || type === 'auction') {
+    // Just scroll to the section instead of redirecting
+    scrollToSection(type === 'featured' ? 'featured' : 'auctionGrid');
+    showToast('Showing all products in this section', 'success');
+  }
+}
 
 console.log('BID IT Main JavaScript Loaded Successfully');
