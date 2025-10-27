@@ -181,6 +181,7 @@
       overflow: hidden;
       margin-bottom: 1rem;
       background: var(--gray-100);
+      box-shadow: var(--shadow-md);
     }
 
     .main-image img {
@@ -192,33 +193,6 @@
 
     .main-image:hover img {
       transform: scale(1.05);
-    }
-
-    .thumbnail-gallery {
-      display: flex;
-      gap: 0.75rem;
-      overflow-x: auto;
-    }
-
-    .thumbnail {
-      width: 80px;
-      height: 80px;
-      border-radius: var(--border-radius);
-      overflow: hidden;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: var(--transition);
-    }
-
-    .thumbnail.active,
-    .thumbnail:hover {
-      border-color: var(--primary);
-    }
-
-    .thumbnail img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
     }
 
     /* PRODUCT DETAILS */
@@ -265,6 +239,8 @@
       font-size: 0.9rem;
       color: var(--gray-600);
       font-weight: 400;
+      display: block;
+      margin-bottom: 0.5rem;
     }
 
     .seller-info {
@@ -321,6 +297,7 @@
       padding: 1.5rem;
       border-radius: var(--border-radius);
       border: 2px solid var(--warning);
+      margin: 1rem 0;
     }
 
     .auction-header {
@@ -347,7 +324,7 @@
     .current-bid {
       font-size: 1.8rem;
       font-weight: 700;
-      color: var(--warning);
+      color: #856404;
       margin: 1rem 0;
     }
 
@@ -367,37 +344,18 @@
 
     .bid-form input:focus {
       outline: none;
-      border-color: var(--primary);
+      border-color: var(--warning);
     }
 
     .bid-history {
       margin-top: 1.5rem;
-      max-height: 300px;
+      max-height: 400px;
       overflow-y: auto;
     }
 
     .bid-history h4 {
       font-size: 1rem;
       margin-bottom: 1rem;
-      color: var(--gray-600);
-    }
-
-    .bid-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem;
-      background: white;
-      border-radius: var(--border-radius);
-      margin-bottom: 0.5rem;
-    }
-
-    .bid-item strong {
-      color: var(--primary);
-    }
-
-    .bid-time {
-      font-size: 0.85rem;
       color: var(--gray-600);
     }
 
@@ -455,9 +413,14 @@
       box-shadow: var(--shadow-md);
     }
 
+    .btn-warning:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     /* RELATED PRODUCTS */
     .related-products {
-      padding: 3rem 2rem;
+      padding: 3rem 0;
     }
 
     .related-header {
@@ -529,6 +492,7 @@
       background-color: var(--gray-800);
       color: white;
       padding: 3rem 2rem 1rem;
+      margin-top: 3rem;
     }
 
     .footer-content {
@@ -660,6 +624,10 @@
       .related-grid {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       }
+
+      .bid-form {
+        flex-direction: column;
+      }
     }
 
     @media (max-width: 480px) {
@@ -669,10 +637,6 @@
 
       .main-image {
         height: 300px;
-      }
-
-      .bid-form {
-        flex-direction: column;
       }
     }
   </style>
@@ -693,6 +657,7 @@
         <a href="index.html">Home</a>
         <a href="buyerPage.html">Browse</a>
         <a href="sellerPage.html">Sell</a>
+        <a href="cart.html"><i class="fas fa-shopping-cart"></i> Cart</a>
         <a href="help.html">Help</a>
       </div>
     </div>
@@ -707,7 +672,7 @@
         <i class="fas fa-chevron-right"></i>
         <a href="buyerPage.html">Products</a>
         <i class="fas fa-chevron-right"></i>
-        <span id="breadcrumbCategory">Category</span>
+        <span id="breadcrumbCategory">Product</span>
       </div>
 
       <!-- PRODUCT SECTION -->
@@ -754,6 +719,14 @@
         <a href="#">Returns</a>
         <a href="#">Contact Us</a>
       </div>
+
+      <div class="footer-links">
+        <h4>Connect</h4>
+        <a href="#"><i class="fab fa-facebook"></i> Facebook</a>
+        <a href="#"><i class="fab fa-twitter"></i> Twitter</a>
+        <a href="#"><i class="fab fa-instagram"></i> Instagram</a>
+        <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+      </div>
     </div>
 
     <div class="footer-bottom">
@@ -767,32 +740,10 @@
   <!-- Paystack Script -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
   
-  <script>
-    // Use the main.js functions
-    const API_BASE_URL = 'http://localhost:5000/api';
-    
-    // Get product ID from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get('id');
-
-    if (!productId) {
-      document.getElementById('productContainer').innerHTML = `
-        <div style="text-align: center; padding: 4rem;">
-          <i class="fas fa-exclamation-circle" style="font-size: 4rem; color: var(--danger);"></i>
-          <h3>Product not found</h3>
-          <p>The product you're looking for doesn't exist.</p>
-          <a href="buyerPage.html" class="btn btn-primary" style="display: inline-flex; margin-top: 1rem;">
-            <i class="fas fa-arrow-left"></i> Back to Products
-          </a>
-        </div>
-      `;
-    } else {
-      // This will use the loadProductDetail function from main.js
-      loadProductDetail();
-    }
-  </script>
-  <script src="product.js"></script>
+  <!-- Main JavaScript -->
+  <script src="main.js"></script>
+  
+  <!-- Product Detail JavaScript -->
+  <script src="productDetail.js"></script>
 </body>
 </html>
-
-
