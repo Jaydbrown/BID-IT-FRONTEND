@@ -1,5 +1,6 @@
 // ========================================
 // BID IT - COMPLETE MAIN JAVASCRIPT
+// With Full Page Linking & University Filter
 // ========================================
 
 // ==========================
@@ -49,6 +50,60 @@ function cleanFetch(url, options = {}) {
 }
 
 // ==========================
+// NAVIGATION FUNCTIONS
+// ==========================
+
+function navigateToHome() {
+  window.location.href = 'index.html';
+}
+
+function navigateToBrowse(params = {}) {
+  const queryParams = new URLSearchParams();
+  if (params.category) queryParams.append('category', params.category);
+  if (params.university) queryParams.append('university', params.university);
+  if (params.search) queryParams.append('search', params.search);
+  
+  const queryString = queryParams.toString();
+  window.location.href = `buyerPage.html${queryString ? '?' + queryString : ''}`;
+}
+
+function navigateToSell() {
+  const token = getAuthToken();
+  if (!token) {
+    showToast('Please login to access seller dashboard', 'error');
+    setTimeout(() => navigateToLogin(), 1500);
+    return;
+  }
+  window.location.href = 'sellerPage.html';
+}
+
+function navigateToCart() {
+  const token = getAuthToken();
+  if (!token) {
+    showToast('Please login to view cart', 'error');
+    setTimeout(() => navigateToLogin(), 1500);
+    return;
+  }
+  window.location.href = 'cart.html';
+}
+
+function navigateToLogin() {
+  window.location.href = 'login.html';
+}
+
+function navigateToSignup() {
+  window.location.href = 'signup.html';
+}
+
+function navigateToHelp() {
+  window.location.href = 'help.html';
+}
+
+function navigateToProduct(productId) {
+  window.location.href = `productDetail.html?id=${productId}`;
+}
+
+// ==========================
 // UTILITY FUNCTIONS
 // ==========================
 
@@ -60,6 +115,18 @@ const getAuthHeaders = () => ({
   'Content-Type': 'application/json',
   'Authorization': `Bearer ${getAuthToken()}`
 });
+
+// Check if user is logged in
+function isLoggedIn() {
+  return !!getAuthToken();
+}
+
+// Logout Function
+function logout() {
+  localStorage.removeItem('token');
+  showToast('Logged out successfully', 'success');
+  setTimeout(() => navigateToHome(), 1000);
+}
 
 // Format Currency
 function formatCurrency(amount) {
@@ -166,6 +233,86 @@ document.head.appendChild(style);
 // NAVIGATION & UI
 // ==========================
 
+// Setup Navigation Links
+function setupNavigationLinks() {
+  // Setup all navbar links
+  document.querySelectorAll('a[href="index.html"]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateToHome();
+    });
+  });
+
+  document.querySelectorAll('a[href="buyerPage.html"]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateToBrowse();
+    });
+  });
+
+  document.querySelectorAll('a[href="sellerPage.html"]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateToSell();
+    });
+  });
+
+  document.querySelectorAll('a[href="cart.html"]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateToCart();
+    });
+  });
+
+  document.querySelectorAll('a[href="login.html"]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateToLogin();
+    });
+  });
+
+  document.querySelectorAll('a[href="signup.html"]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateToSignup();
+    });
+  });
+
+  document.querySelectorAll('a[href="help.html"]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateToHelp();
+    });
+  });
+
+  // Setup "Become a Seller" buttons
+  document.querySelectorAll('.btn-outline').forEach(button => {
+    const buttonText = button.textContent.toLowerCase();
+    if (buttonText.includes('become a seller') || buttonText.includes('start selling')) {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (isLoggedIn()) {
+          navigateToSell();
+        } else {
+          showToast('Please create an account to become a seller', 'error');
+          setTimeout(() => navigateToSignup(), 1500);
+        }
+      });
+    }
+  });
+
+  // Setup Browse/Shop buttons
+  document.querySelectorAll('.btn-primary').forEach(button => {
+    const buttonText = button.textContent.toLowerCase();
+    if (buttonText.includes('browse') || buttonText.includes('shop now') || buttonText.includes('explore')) {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateToBrowse();
+      });
+    }
+  });
+}
+
 // Intro Animation
 function initIntroAnimation() {
   const introElement = document.getElementById('introText');
@@ -255,7 +402,7 @@ function initHamburgerMenu() {
   }
 }
 
-// Search Overlay - Enhanced for Live Search
+// Search Overlay
 function initSearchOverlay() {
   const searchIcon = document.getElementById('searchIcon');
   const searchOverlay = document.getElementById('searchOverlay');
@@ -273,7 +420,6 @@ function initSearchOverlay() {
     closeSearch.addEventListener('click', () => {
       searchOverlay.classList.remove('active');
       if (searchInput) searchInput.value = '';
-      // Clear live search results
       const resultsContainer = document.getElementById('liveSearchResults');
       if (resultsContainer) resultsContainer.innerHTML = '';
     });
@@ -297,7 +443,6 @@ function initSearchOverlay() {
 function initLiveSearchOverlay(searchInput) {
   let searchTimeout;
   
-  // Create results container if it doesn't exist
   let resultsContainer = document.getElementById('liveSearchResults');
   if (!resultsContainer) {
     resultsContainer = document.createElement('div');
@@ -346,7 +491,7 @@ function initLiveSearchOverlay(searchInput) {
                   : 'https://via.placeholder.com/180x180?text=Product';
                 
                 return `
-                  <div onclick="viewProduct(${item.id})" style="cursor: pointer; border: 1px solid #e0e0e0; border-radius: 8px; padding: 0.75rem; transition: all 0.3s ease; background: white;">
+                  <div onclick="navigateToProduct(${item.id})" style="cursor: pointer; border: 1px solid #e0e0e0; border-radius: 8px; padding: 0.75rem; transition: all 0.3s ease; background: white;">
                     <img src="${imageUrl}" alt="${item.title}" 
                          style="width: 100%; height: 150px; object-fit: cover; border-radius: 6px; margin-bottom: 0.5rem;"
                          onerror="this.src='https://via.placeholder.com/180x180?text=No+Image'" />
@@ -367,17 +512,61 @@ function initLiveSearchOverlay(searchInput) {
       }
     }, 300);
   });
-
-  // Remove Enter key redirect - keep search in overlay
-  searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      // Just keep showing results in overlay, don't redirect
-    }
-  });
 }
 
-// Mobile University Filter in Sidebar
+// ==========================
+// UNIVERSITY FILTER
+// ==========================
+
+let currentFilters = {
+  category: null,
+  university: null,
+  search: null,
+  is_auction: null
+};
+
+// Initialize Desktop University Filter
+function initDesktopUniversityFilter() {
+  const universitySelect = document.getElementById('universitySelect');
+  
+  if (universitySelect) {
+    // Set current value from URL or filters
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlUniversity = urlParams.get('university');
+    
+    if (urlUniversity) {
+      universitySelect.value = urlUniversity;
+      currentFilters.university = urlUniversity;
+    }
+    
+    // Add change listener
+    universitySelect.addEventListener('change', (e) => {
+      const university = e.target.value;
+      currentFilters.university = university;
+      
+      // Determine current page and act accordingly
+      const path = window.location.pathname;
+      const filename = path.split('/').pop() || 'index.html';
+      
+      if (filename === 'index.html' || filename === '') {
+        // Reload index page sections with filter
+        loadFeaturedProducts();
+        loadFlashSales();
+        loadAuctions();
+        showToast(university ? `Filtering by ${getUniversityName(university)}` : 'Showing all universities', 'success');
+      } else if (filename === 'buyerPage.html') {
+        // Reload buyer page products
+        loadProducts(currentFilters);
+        showToast(university ? `Filtering by ${getUniversityName(university)}` : 'Showing all universities', 'success');
+      } else {
+        // For other pages, navigate to browse with filter
+        navigateToBrowse({ university });
+      }
+    });
+  }
+}
+
+// Initialize Mobile University Filter
 function initMobileUniversityFilter() {
   const sidebar = document.getElementById('sidebar') || document.getElementById('mySidebar');
   if (!sidebar) return;
@@ -401,19 +590,26 @@ function initMobileUniversityFilter() {
       </div>
     `;
 
+    // Get current university from URL or filters
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentUniversity = urlParams.get('university') || currentFilters.university || '';
+
     // Add university filter
     const filterHTML = `
       <div class="mobile-university-filter" style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 0.5rem;">
-        <label style="color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Select University</label>
+        <label style="color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Filter by University</label>
         <select id="mobileUniversitySelect" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #dee2e6; background: white; font-size: 0.9rem;">
           <option value="">All Universities</option>
-          <option value="uniben">University of Benin</option>
-          <option value="unilag">University of Lagos</option>
-          <option value="abu">Ahmadu Bello University</option>
-          <option value="ui">University of Ibadan</option>
-          <option value="unn">University of Nigeria</option>
-          <option value="unijos">University of Jos</option>
-          <option value="futminna">FUT Minna</option>
+          <option value="uniben" ${currentUniversity === 'uniben' ? 'selected' : ''}>University of Benin</option>
+          <option value="unilag" ${currentUniversity === 'unilag' ? 'selected' : ''}>University of Lagos</option>
+          <option value="abu" ${currentUniversity === 'abu' ? 'selected' : ''}>Ahmadu Bello University</option>
+          <option value="ui" ${currentUniversity === 'ui' ? 'selected' : ''}>University of Ibadan</option>
+          <option value="unn" ${currentUniversity === 'unn' ? 'selected' : ''}>University of Nigeria</option>
+          <option value="unijos" ${currentUniversity === 'unijos' ? 'selected' : ''}>University of Jos</option>
+          <option value="futminna" ${currentUniversity === 'futminna' ? 'selected' : ''}>FUT Minna</option>
+          <option value="futa" ${currentUniversity === 'futa' ? 'selected' : ''}>FUTA, Akure</option>
+          <option value="lasu" ${currentUniversity === 'lasu' ? 'selected' : ''}>LASU</option>
+          <option value="unilorin" ${currentUniversity === 'unilorin' ? 'selected' : ''}>University of Ilorin</option>
         </select>
       </div>
     `;
@@ -429,38 +625,48 @@ function initMobileUniversityFilter() {
       if (mobileSelect) {
         mobileSelect.addEventListener('change', (e) => {
           const university = e.target.value;
-          if (university) {
-            window.location.href = `buyerPage.html?university=${university}`;
-          } else {
-            window.location.href = 'buyerPage.html';
-          }
+          currentFilters.university = university;
+          
+          // Determine current page
+          const path = window.location.pathname;
+          const filename = path.split('/').pop() || 'index.html';
+          
+          // Close sidebar
           sidebar.classList.remove('active');
           document.body.style.overflow = '';
+          
+          if (filename === 'index.html' || filename === '') {
+            loadFeaturedProducts();
+            loadFlashSales();
+            loadAuctions();
+            showToast(university ? `Filtering by ${getUniversityName(university)}` : 'Showing all universities', 'success');
+          } else if (filename === 'buyerPage.html') {
+            loadProducts(currentFilters);
+            showToast(university ? `Filtering by ${getUniversityName(university)}` : 'Showing all universities', 'success');
+          } else {
+            navigateToBrowse({ university });
+          }
         });
       }
     }
   }
 }
 
-// Initialize Desktop University Filter
-function initDesktopUniversityFilter() {
-  const universitySelect = document.getElementById('universitySelect');
-  
-  if (universitySelect) {
-    // Remove any existing listeners
-    const newSelect = universitySelect.cloneNode(true);
-    universitySelect.parentNode.replaceChild(newSelect, universitySelect);
-    
-    // Add new listener
-    newSelect.addEventListener('change', (e) => {
-      const university = e.target.value;
-      if (university) {
-        window.location.href = `buyerPage.html?university=${university}`;
-      } else {
-        window.location.href = 'buyerPage.html';
-      }
-    });
-  }
+// Get University Full Name
+function getUniversityName(code) {
+  const universities = {
+    'uniben': 'University of Benin',
+    'unilag': 'University of Lagos',
+    'abu': 'Ahmadu Bello University',
+    'ui': 'University of Ibadan',
+    'unn': 'University of Nigeria',
+    'unijos': 'University of Jos',
+    'futminna': 'FUT Minna',
+    'futa': 'FUTA, Akure',
+    'lasu': 'LASU',
+    'unilorin': 'University of Ilorin'
+  };
+  return universities[code] || code;
 }
 
 // Open mobile search
@@ -500,21 +706,26 @@ function scrollToSection(sectionId) {
 
 // View Product
 function viewProduct(productId) {
-  window.location.href = `productDetail.html?id=${productId}`;
+  navigateToProduct(productId);
 }
 
-// Filter by Category - Scroll to section on index, redirect on other pages
+// Filter by Category
 function filterByCategory(category) {
+  currentFilters.category = category;
+  
   const path = window.location.pathname;
   const filename = path.split('/').pop() || 'index.html';
   
-  // If on index.html, filter and scroll to featured section
   if (filename === 'index.html' || filename === '') {
-    currentFilters.category = category;
     loadFeaturedProducts();
     loadAuctions();
     showToast(`Filtering by ${category}`, 'success');
     scrollToSection('featured');
+  } else if (filename === 'buyerPage.html') {
+    loadProducts(currentFilters);
+    showToast(`Filtering by ${category}`, 'success');
+  } else {
+    navigateToBrowse({ category });
   }
 }
 
@@ -526,7 +737,7 @@ function renderProducts(products, containerId) {
   container.innerHTML = '';
 
   if (!products || products.length === 0) {
-    container.innerHTML = '<p style="text-align: center; padding: 2rem; color: #6c757d;">No products available</p>';
+    container.innerHTML = '<p style="text-align: center; padding: 2rem; color: #6c757d; grid-column: 1/-1;">No products available</p>';
     return;
   }
 
@@ -552,6 +763,11 @@ function renderProducts(products, containerId) {
           <span><i class="fas fa-user"></i> ${product.seller_username || 'Seller'}</span>
           <span><i class="fas fa-university"></i> ${product.university || 'N/A'}</span>
         </div>
+        ${product.is_auction ? `
+          <div style="background: #fff3cd; padding: 0.5rem; border-radius: 6px; margin-top: 0.5rem; font-size: 0.85rem; color: #856404;">
+            <i class="fas fa-gavel"></i> Live Auction
+          </div>
+        ` : ''}
         <div class="product-actions">
           <button class="btn btn-primary" onclick="event.stopPropagation(); viewProduct(${product.id})">
             <i class="fas fa-eye"></i> View
@@ -571,9 +787,7 @@ async function addToWishlist(productId) {
   const token = getAuthToken();
   if (!token) {
     showToast('Please login to add to wishlist', 'error');
-    setTimeout(() => {
-      window.location.href = 'login.html';
-    }, 1500);
+    setTimeout(() => navigateToLogin(), 1500);
     return;
   }
 
@@ -603,11 +817,11 @@ async function addToWishlist(productId) {
 async function loadFeaturedProducts() {
   try {
     const queryParams = new URLSearchParams();
-    if (currentFilters.university) {
-      queryParams.append('university', currentFilters.university);
-    }
+    if (currentFilters.university) queryParams.append('university', currentFilters.university);
+    if (currentFilters.category) queryParams.append('category', currentFilters.category);
+    queryParams.append('limit', '8');
     
-    const response = await cleanFetch(`${API_BASE_URL}/items?${queryParams}&limit=8`);
+    const response = await cleanFetch(`${API_BASE_URL}/items?${queryParams}`);
     if (!response.ok) throw new Error('Failed to fetch');
     
     const items = await response.json();
@@ -616,7 +830,7 @@ async function loadFeaturedProducts() {
     console.error('Error loading featured products:', error);
     const container = document.getElementById('featuredGrid');
     if (container) {
-      container.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc3545;">Failed to load products</p>';
+      container.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc3545; grid-column: 1/-1;">Failed to load products</p>';
     }
   }
 }
@@ -625,14 +839,14 @@ async function loadFeaturedProducts() {
 async function loadFlashSales() {
   try {
     const queryParams = new URLSearchParams();
-    if (currentFilters.university) {
-      queryParams.append('university', currentFilters.university);
-    }
+    if (currentFilters.university) queryParams.append('university', currentFilters.university);
+    if (currentFilters.category) queryParams.append('category', currentFilters.category);
+    queryParams.append('limit', '4');
     
     const response = await cleanFetch(`${API_BASE_URL}/flash-sales?${queryParams}`);
     if (!response.ok) {
       // Fallback to regular products if flash sales endpoint doesn't exist
-      const fallbackResponse = await cleanFetch(`${API_BASE_URL}/items?${queryParams}&limit=4`);
+      const fallbackResponse = await cleanFetch(`${API_BASE_URL}/items?${queryParams}`);
       const items = await fallbackResponse.json();
       renderProducts(items, 'flashSalesGrid');
       return;
@@ -649,9 +863,8 @@ async function loadFlashSales() {
 async function loadAuctions() {
   try {
     const queryParams = new URLSearchParams();
-    if (currentFilters.university) {
-      queryParams.append('university', currentFilters.university);
-    }
+    if (currentFilters.university) queryParams.append('university', currentFilters.university);
+    if (currentFilters.category) queryParams.append('category', currentFilters.category);
     queryParams.append('is_auction', 'true');
     queryParams.append('limit', '8');
     
@@ -726,32 +939,11 @@ function initIndexPage() {
   console.log('Initializing index page...');
   
   initIntroAnimation();
-  initDesktopUniversityFilter();
   
-  // Add Become a Seller button functionality
-  const becomeSellerButtons = document.querySelectorAll('.btn-outline');
-  becomeSellerButtons.forEach(button => {
-    const buttonText = button.textContent.toLowerCase();
-    if (buttonText.includes('become a seller')) {
-      button.onclick = () => {
-        window.location.href = 'signup.html';
-      };
-    }
-  });
-  
-  // Add sidebar "Become a Seller" link functionality
-  const sidebarLinks = document.querySelectorAll('#sidebar a');
-  sidebarLinks.forEach(link => {
-    const linkText = link.textContent.toLowerCase();
-    if (linkText.includes('become a seller')) {
-      link.onclick = (e) => {
-        e.preventDefault();
-        window.location.href = 'signup.html';
-      };
-    }
-  });
-  
+  // Setup navigation after intro
   setTimeout(() => {
+    setupNavigationLinks();
+    initDesktopUniversityFilter();
     initHeroTyping();
     loadFeaturedProducts();
     loadFlashSales();
@@ -763,13 +955,6 @@ function initIndexPage() {
 // ==========================
 // BUYER PAGE FUNCTIONS
 // ==========================
-
-let currentFilters = {
-  category: null,
-  university: null,
-  search: null,
-  is_auction: null
-};
 
 // Load Products with Filters
 async function loadProducts(filters = {}) {
@@ -797,9 +982,13 @@ async function loadProducts(filters = {}) {
     const items = await response.json();
     
     // Render to different sections
-    renderProducts(items, 'featuredGrid');
-    renderProducts(items.filter(i => i.is_auction), 'auctionGrid');
-    renderProducts(items.filter(i => !i.is_auction), 'notAuctionList');
+    const featuredContainer = document.getElementById('featuredGrid');
+    const auctionContainer = document.getElementById('auctionGrid');
+    const notAuctionContainer = document.getElementById('notAuctionList');
+    
+    if (featuredContainer) renderProducts(items, 'featuredGrid');
+    if (auctionContainer) renderProducts(items.filter(i => i.is_auction), 'auctionGrid');
+    if (notAuctionContainer) renderProducts(items.filter(i => !i.is_auction), 'notAuctionList');
   } catch (error) {
     console.error('Error loading products:', error);
     showToast('Failed to load products', 'error');
@@ -885,27 +1074,7 @@ function initQuickSearch() {
 
 // Select Search Item
 function selectSearchItem(itemId) {
-  window.location.href = `productDetail.html?id=${itemId}`;
-}
-
-// University Select
-function initUniversityFilter() {
-  const universitySelect = document.getElementById('universitySelect');
-  const mobileUniversitySelect = document.getElementById('mobileUniversitySelect');
-
-  if (universitySelect) {
-    universitySelect.addEventListener('change', (e) => {
-      currentFilters.university = e.target.value;
-      loadProducts(currentFilters);
-    });
-  }
-
-  if (mobileUniversitySelect) {
-    mobileUniversitySelect.addEventListener('change', (e) => {
-      currentFilters.university = e.target.value;
-      loadProducts(currentFilters);
-    });
-  }
+  navigateToProduct(itemId);
 }
 
 // Category Filter
@@ -916,6 +1085,7 @@ function initCategoryFilter() {
       if (category) {
         currentFilters.category = category;
         loadProducts(currentFilters);
+        showToast(`Filtering by ${category}`, 'success');
       }
     });
   });
@@ -981,8 +1151,9 @@ async function trackProductView(productId) {
 function initBuyerPage() {
   console.log('Initializing buyer page...');
   
+  setupNavigationLinks();
   initQuickSearch();
-  initUniversityFilter();
+  initDesktopUniversityFilter();
   initCategoryFilter();
   
   // Check URL params
@@ -1008,105 +1179,16 @@ function initBuyerPage() {
 }
 
 // ==========================
-// PAGE DETECTION & INIT
+// SHOW ALL PRODUCTS OVERLAY
 // ==========================
 
-// Detect which page we're on and initialize accordingly
-function initializePage() {
-  const path = window.location.pathname;
-  const filename = path.split('/').pop() || 'index.html';
-
-  console.log('Current page:', filename);
-
-  // Initialize common elements
-  initHamburgerMenu();
-  initSearchOverlay();
-  initMobileUniversityFilter();
-
-  // Initialize page-specific functionality
-  if (filename === 'index.html' || filename === '') {
-    initIndexPage();
-  } else if (filename === 'buyerPage.html') {
-    initBuyerPage();
-  } else if (filename === 'productDetail.html') {
-    // Product detail initialization is in product.js
-    console.log('Product detail page detected');
-    initDesktopUniversityFilter();
-  } else if (filename === 'cart.html') {
-    // Cart initialization is in cart.js
-    console.log('Cart page detected');
-    initDesktopUniversityFilter();
-  } else if (filename === 'login.html') {
-    console.log('Login page detected');
-  } else if (filename === 'signup.html') {
-    console.log('Signup page detected');
-  } else {
-    // For any other page, still initialize university filter
-    initDesktopUniversityFilter();
-  }
-
-  // Check authentication status
-  updateAuthUI();
-}
-
-// Update UI based on authentication status
-function updateAuthUI() {
-  const token = getAuthToken();
-  const authButtons = document.querySelectorAll('.auth-required');
-  
-  authButtons.forEach(button => {
-    if (!token) {
-      button.addEventListener('click', (e) => {
-        e.preventDefault();
-        showToast('Please login to continue', 'error');
-        setTimeout(() => {
-          window.location.href = 'login.html';
-        }, 1500);
-      });
-    }
-  });
-}
-
-// ==========================
-// EVENT LISTENERS
-// ==========================
-
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializePage);
-} else {
-  initializePage();
-}
-
-// Handle window resize
-let resizeTimeout;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(() => {
-    initMobileUniversityFilter();
-  }, 250);
-});
-
-// Expose functions globally
-window.viewProduct = viewProduct;
-window.addToWishlist = addToWishlist;
-window.filterByCategory = filterByCategory;
-window.scrollToTop = scrollToTop;
-window.scrollToSection = scrollToSection;
-window.handleNewsletterSubmit = handleNewsletterSubmit;
-window.selectSearchItem = selectSearchItem;
-window.showToast = showToast;
-window.openMobileSearch = openMobileSearch;
-window.showAllProducts = showAllProducts;
-
-// Show All Products Function - Open Products Overlay
+// Show All Products Function
 function showAllProducts(type) {
   openProductsOverlay(type);
 }
 
 // Open Products Overlay
 async function openProductsOverlay(type) {
-  // Create overlay if it doesn't exist
   let overlay = document.getElementById('productsOverlay');
   
   if (!overlay) {
@@ -1186,7 +1268,7 @@ async function openProductsOverlay(type) {
           : 'https://via.placeholder.com/220x220?text=Product';
         
         return `
-          <div onclick="viewProduct(${item.id})" style="cursor: pointer; border: 1px solid #e0e0e0; border-radius: 12px; padding: 1rem; transition: all 0.3s ease; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+          <div onclick="navigateToProduct(${item.id})" style="cursor: pointer; border: 1px solid #e0e0e0; border-radius: 12px; padding: 1rem; transition: all 0.3s ease; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
             <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin-bottom: 0.75rem;">
               <img src="${imageUrl}" alt="${item.title}" 
                    style="width: 100%; height: 100%; object-fit: cover;"
@@ -1221,4 +1303,142 @@ function closeProductsOverlay() {
   }
 }
 
-console.log('BID IT Main JavaScript Loaded Successfully');
+// ==========================
+// PAGE DETECTION & INIT
+// ==========================
+
+// Detect which page we're on and initialize accordingly
+function initializePage() {
+  const path = window.location.pathname;
+  const filename = path.split('/').pop() || 'index.html';
+
+  console.log('Current page:', filename);
+
+  // Initialize common elements
+  initHamburgerMenu();
+  initSearchOverlay();
+  initMobileUniversityFilter();
+
+  // Initialize page-specific functionality
+  if (filename === 'index.html' || filename === '') {
+    initIndexPage();
+  } else if (filename === 'buyerPage.html') {
+    initBuyerPage();
+  } else if (filename === 'productDetail.html') {
+    console.log('Product detail page detected');
+    setupNavigationLinks();
+    initDesktopUniversityFilter();
+  } else if (filename === 'cart.html') {
+    console.log('Cart page detected');
+    setupNavigationLinks();
+    initDesktopUniversityFilter();
+  } else if (filename === 'sellerPage.html') {
+    console.log('Seller page detected');
+    setupNavigationLinks();
+    initDesktopUniversityFilter();
+  } else if (filename === 'login.html') {
+    console.log('Login page detected');
+    setupNavigationLinks();
+  } else if (filename === 'signup.html') {
+    console.log('Signup page detected');
+    setupNavigationLinks();
+  } else if (filename === 'help.html') {
+    console.log('Help page detected');
+    setupNavigationLinks();
+    initDesktopUniversityFilter();
+  } else {
+    // For any other page
+    setupNavigationLinks();
+    initDesktopUniversityFilter();
+  }
+
+  // Check authentication status
+  updateAuthUI();
+}
+
+// Update UI based on authentication status
+function updateAuthUI() {
+  const token = getAuthToken();
+  const authButtons = document.querySelectorAll('.auth-required');
+  
+  authButtons.forEach(button => {
+    if (!token) {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        showToast('Please login to continue', 'error');
+        setTimeout(() => navigateToLogin(), 1500);
+      });
+    }
+  });
+
+  // Update navbar based on auth status
+  const navbarLinks = document.querySelector('.navbar-links');
+  if (navbarLinks && token) {
+    // Check if logout button doesn't exist
+    if (!navbarLinks.querySelector('.logout-btn')) {
+      const logoutBtn = document.createElement('a');
+      logoutBtn.href = '#';
+      logoutBtn.className = 'logout-btn';
+      logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+      logoutBtn.onclick = (e) => {
+        e.preventDefault();
+        logout();
+      };
+      navbarLinks.appendChild(logoutBtn);
+    }
+  }
+}
+
+// ==========================
+// EVENT LISTENERS
+// ==========================
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializePage);
+} else {
+  initializePage();
+}
+
+// Handle window resize
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    initMobileUniversityFilter();
+  }, 250);
+});
+
+// ==========================
+// EXPOSE FUNCTIONS GLOBALLY
+// ==========================
+
+window.navigateToHome = navigateToHome;
+window.navigateToBrowse = navigateToBrowse;
+window.navigateToSell = navigateToSell;
+window.navigateToCart = navigateToCart;
+window.navigateToLogin = navigateToLogin;
+window.navigateToSignup = navigateToSignup;
+window.navigateToHelp = navigateToHelp;
+window.navigateToProduct = navigateToProduct;
+window.viewProduct = viewProduct;
+window.addToWishlist = addToWishlist;
+window.filterByCategory = filterByCategory;
+window.scrollToTop = scrollToTop;
+window.scrollToSection = scrollToSection;
+window.handleNewsletterSubmit = handleNewsletterSubmit;
+window.selectSearchItem = selectSearchItem;
+window.showToast = showToast;
+window.openMobileSearch = openMobileSearch;
+window.showAllProducts = showAllProducts;
+window.closeProductsOverlay = closeProductsOverlay;
+window.logout = logout;
+window.isLoggedIn = isLoggedIn;
+window.getAuthToken = getAuthToken;
+window.getAuthHeaders = getAuthHeaders;
+window.formatCurrency = formatCurrency;
+window.formatDate = formatDate;
+window.cleanFetch = cleanFetch;
+
+console.log('✅ BID IT Main JavaScript Loaded Successfully');
+console.log('📍 Current Filters:', currentFilters);
