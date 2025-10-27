@@ -1,12 +1,13 @@
 // ========================================
 // PRODUCT DETAIL PAGE JAVASCRIPT
+// Integrated with Backend API
 // ========================================
 
-// Check if main.js functions are available, if not define minimal versions
-if (typeof API_BASE_URL === 'undefined') {
-  const API_BASE_URL = 'https://bid-it-backend.onrender.com/api';
-}
+// API Configuration
+const API_BASE_URL = 'https://bid-it-backend.onrender.com/api';
+const PAYSTACK_PUBLIC_KEY = 'pk_test_f50f3f81315685aaee766c97128f172c9abe1adf';
 
+// Use cleanFetch from main.js or define it
 if (typeof cleanFetch === 'undefined') {
   const originalXHR = window.XMLHttpRequest;
   window.cleanFetch = function(url, options = {}) {
@@ -45,6 +46,13 @@ if (typeof cleanFetch === 'undefined') {
   };
 }
 
+// Get Auth helpers
+const getAuthToken = () => localStorage.getItem('token');
+const getAuthHeaders = () => ({
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${getAuthToken()}`
+});
+
 // Get product ID from URL
 const urlParams = new URLSearchParams(window.location.search);
 const productId = urlParams.get('id');
@@ -52,11 +60,14 @@ const productId = urlParams.get('id');
 // Product state
 let currentProduct = null;
 let auctionTimer = null;
+let bidHistory = [];
 
 // ==========================
 // LOAD PRODUCT DETAIL
 // ==========================
 async function loadProductDetail() {
+  console.log('Loading product detail for ID:', productId);
+  
   if (!productId) {
     showProductNotFound();
     return;
@@ -74,6 +85,7 @@ async function loadProductDetail() {
   `;
 
   try {
+    // Fetch product details - GET /api/items/:id
     const response = await cleanFetch(`${API_BASE_URL}/items/${productId}`);
     
     if (!response.ok) {
@@ -81,17 +93,80 @@ async function loadProductDetail() {
     }
 
     currentProduct = await response.json();
+    console.log('Loaded product:', currentProduct);
+    
     renderProductDetail(currentProduct);
+    
+    // Load bid history if it's an auction
+    if (currentProduct.is_auction) {
+      await loadBidHistory();
+    }
+    
+    // Load related products
     loadRelatedProducts(currentProduct.category);
     
     // Track product view if user is logged in
-    if (window.trackProductView && typeof window.trackProductView === 'function') {
+    if (getAuthToken() && window.trackProductView) {
       window.trackProductView(productId);
     }
   } catch (error) {
     console.error('Error loading product:', error);
     showProductNotFound();
   }
+}
+
+// ==========================
+// LOAD BID HISTORY
+// ==========================
+async function loadBidHistory() {
+  if (!currentProduct || !currentProduct.is_auction) return;
+
+  try {
+    // GET /api/bids/:itemId - Fetch bids for this item
+    const response = await cleanFetch(`${API_BASE_URL}/bids/${productId}`);
+    
+    if (response.ok) {
+      bidHistory = await response.json();
+      console.log('Loaded bid history:', bidHistory);
+      renderBidHistory();
+    }
+  } catch (error) {
+    console.error('Error loading bid history:', error);
+  }
+}
+
+// ==========================
+// RENDER BID HISTORY
+// ==========================
+function renderBidHistory() {
+  const bidHistoryList = document.getElementById('bidHistoryList');
+  if (!bidHistoryList) return;
+
+  if (!bidHistory || bidHistory.length === 0) {
+    bidHistoryList.innerHTML = '<p style="text-align: center; padding: 1rem; color: #666;">No bids yet. Be the first to bid!</p>';
+    return;
+  }
+
+  // Sort bids by amount (highest first)
+  const sortedBids = [...bidHistory].sort((a, b) => b.amount - a.amount);
+
+  bidHistoryList.innerHTML = sortedBids.map((bid, index) => `
+    <div class="bid-item" style="padding: 0.75rem; background: ${index === 0 ? '#fff3cd' : 'white'}; border-radius: 8px; margin-bottom: 0.5rem; border: ${index === 0 ? '2px solid #ffc107' : '1px solid #e0e0e0'};">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <strong style="color: ${index === 0 ? '#856404' : '#333'};">
+            ${index === 0 ? '🏆 ' : ''}${bid.bidder_username || 'Bidder'}
+          </strong>
+          <div class="bid-time" style="font-size: 0.85rem; color: #666;">
+            ${formatDate(bid.created_at)}
+          </div>
+        </div>
+        <strong style="color: ${index === 0 ? '#856404' : '#4361ee'}; font-size: 1.1rem;">
+          ${formatCurrency(bid.amount)}
+        </strong>
+      </div>
+    </div>
+  `).join('');
 }
 
 // ==========================
@@ -112,7 +187,13 @@ function renderProductDetail(product) {
     : 'https://via.placeholder.com/500x500?text=Product';
 
   const isAuction = product.is_auction;
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
+  const isOwner = token && product.seller_id === getUserIdFromToken();
+
+  // Get current highest bid or starting price
+  const currentPrice = isAuction 
+    ? (bidHistory.length > 0 ? Math.max(...bidHistory.map(b => b.amount)) : product.starting_price)
+    : product.starting_price;
 
   container.innerHTML = `
     <div class="product-container">
@@ -138,12 +219,12 @@ function renderProductDetail(product) {
             <span>${formatDate(product.created_at)}</span>
           </div>
           <div class="meta-item">
-            <i class="fas fa-eye"></i>
-            <span>${product.views || 0} views</span>
+            <i class="fas fa-university"></i>
+            <span>${product.university || 'University'}</span>
           </div>
         </div>
 
-        ${isAuction ? renderAuctionSection(product) : renderBuyNowSection(product)}
+        ${isAuction ? renderAuctionSection(product, currentPrice) : renderBuyNowSection(product)}
 
         <!-- Seller Info -->
         <div class="seller-info">
@@ -163,7 +244,7 @@ function renderProductDetail(product) {
         </div>
 
         <!-- Action Buttons -->
-        ${renderActionButtons(product, token)}
+        ${isOwner ? renderOwnerActions(product) : renderBuyerActions(product, token)}
       </div>
     </div>
   `;
@@ -177,9 +258,9 @@ function renderProductDetail(product) {
 // ==========================
 // RENDER AUCTION SECTION
 // ==========================
-function renderAuctionSection(product) {
-  const currentBid = product.current_bid || product.starting_price;
-  const timeRemaining = getTimeRemaining(product.auction_end_time);
+function renderAuctionSection(product, currentBid) {
+  const timeRemaining = product.auction_end_time ? getTimeRemaining(product.auction_end_time) : 'N/A';
+  const bidCount = bidHistory.length;
 
   return `
     <div class="auction-section">
@@ -189,11 +270,11 @@ function renderAuctionSection(product) {
       </div>
       
       <div class="current-bid">
-        Current Bid: ${formatCurrency(currentBid)}
+        Current ${bidCount > 0 ? 'Bid' : 'Starting Price'}: ${formatCurrency(currentBid)}
       </div>
       
       <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">
-        <i class="fas fa-users"></i> ${product.bid_count || 0} bid(s)
+        <i class="fas fa-users"></i> ${bidCount} bid(s) placed
       </p>
 
       <div class="bid-form">
@@ -228,9 +309,28 @@ function renderBuyNowSection(product) {
 }
 
 // ==========================
-// RENDER ACTION BUTTONS
+// RENDER OWNER ACTIONS
 // ==========================
-function renderActionButtons(product, token) {
+function renderOwnerActions(product) {
+  return `
+    <div class="action-buttons">
+      <button class="btn btn-outline" onclick="editProduct(${product.id})">
+        <i class="fas fa-edit"></i> Edit Listing
+      </button>
+      <button class="btn btn-outline" style="border-color: #dc3545; color: #dc3545;" onclick="deleteProduct(${product.id})">
+        <i class="fas fa-trash"></i> Delete
+      </button>
+    </div>
+    <p style="text-align: center; margin-top: 1rem; color: #666; font-size: 0.9rem;">
+      <i class="fas fa-info-circle"></i> This is your listing
+    </p>
+  `;
+}
+
+// ==========================
+// RENDER BUYER ACTIONS
+// ==========================
+function renderBuyerActions(product, token) {
   if (!token) {
     return `
       <div class="action-buttons">
@@ -275,6 +375,16 @@ function initAuctionTimer(endTime) {
     if (timeString === 'Auction Ended') {
       clearInterval(auctionTimer);
       timerElement.style.background = '#dc3545';
+      
+      // Disable bid input and button
+      const bidInput = document.getElementById('bidAmount');
+      const bidButton = document.querySelector('.btn-warning');
+      if (bidInput) bidInput.disabled = true;
+      if (bidButton) {
+        bidButton.disabled = true;
+        bidButton.textContent = 'Auction Ended';
+        bidButton.style.opacity = '0.5';
+      }
     }
   }
 
@@ -309,7 +419,7 @@ function getTimeRemaining(endTime) {
 // PLACE BID
 // ==========================
 async function placeBid() {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   if (!token) {
     showLoginRequired();
     return;
@@ -318,24 +428,26 @@ async function placeBid() {
   const bidInput = document.getElementById('bidAmount');
   if (!bidInput) return;
 
-  const bidAmount = parseFloat(bidInput.value);
-  const currentBid = currentProduct.current_bid || currentProduct.starting_price;
+  const amount = parseFloat(bidInput.value);
+  
+  // Get current highest bid
+  const currentBid = bidHistory.length > 0 
+    ? Math.max(...bidHistory.map(b => b.amount)) 
+    : currentProduct.starting_price;
 
-  if (!bidAmount || bidAmount <= currentBid) {
+  if (!amount || amount <= currentBid) {
     showToast(`Bid must be higher than ${formatCurrency(currentBid)}`, 'error');
     return;
   }
 
   try {
+    // POST /api/bids - Place bid
     const response = await cleanFetch(`${API_BASE_URL}/bids`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
-        item_id: productId,
-        bid_amount: bidAmount
+        item_id: parseInt(productId),
+        amount: amount
       })
     });
 
@@ -344,11 +456,20 @@ async function placeBid() {
       throw new Error(error.message || 'Failed to place bid');
     }
 
-    showToast('Bid placed successfully!', 'success');
+    const newBid = await response.json();
+    console.log('Bid placed:', newBid);
+    
+    showToast('✅ Bid placed successfully!', 'success');
     bidInput.value = '';
     
-    // Reload product to get updated bid info
-    setTimeout(() => loadProductDetail(), 1000);
+    // Reload bid history
+    await loadBidHistory();
+    
+    // Update current bid display
+    const currentBidEl = document.querySelector('.current-bid');
+    if (currentBidEl) {
+      currentBidEl.innerHTML = `Current Bid: ${formatCurrency(amount)}`;
+    }
   } catch (error) {
     console.error('Error placing bid:', error);
     showToast(error.message || 'Failed to place bid', 'error');
@@ -359,19 +480,17 @@ async function placeBid() {
 // ADD TO CART
 // ==========================
 async function addToCart(itemId) {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   if (!token) {
     showLoginRequired();
     return;
   }
 
   try {
+    // POST /api/cart
     const response = await cleanFetch(`${API_BASE_URL}/cart`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         item_id: itemId,
         quantity: 1
@@ -383,7 +502,7 @@ async function addToCart(itemId) {
       throw new Error(error.message || 'Failed to add to cart');
     }
 
-    showToast('Added to cart!', 'success');
+    showToast('✅ Added to cart!', 'success');
   } catch (error) {
     console.error('Error adding to cart:', error);
     showToast(error.message || 'Failed to add to cart', 'error');
@@ -393,8 +512,8 @@ async function addToCart(itemId) {
 // ==========================
 // BUY NOW
 // ==========================
-async function buyNow(itemId) {
-  const token = localStorage.getItem('token');
+function buyNow(itemId) {
+  const token = getAuthToken();
   if (!token) {
     showLoginRequired();
     return;
@@ -408,12 +527,12 @@ async function buyNow(itemId) {
     const tokenPayload = JSON.parse(atob(token.split('.')[1]));
     userEmail = tokenPayload.email || userEmail;
   } catch (e) {
-    console.log('Could not extract email');
+    console.log('Could not extract email from token');
   }
 
   // Launch Paystack payment
   const handler = PaystackPop.setup({
-    key: 'pk_test_f50f3f81315685aaee766c97128f172c9abe1adf',
+    key: PAYSTACK_PUBLIC_KEY,
     email: userEmail,
     amount: currentProduct.starting_price * 100, // Convert to kobo
     currency: "NGN",
@@ -441,18 +560,56 @@ async function buyNow(itemId) {
 // ==========================
 async function handlePaymentSuccess(response, itemId) {
   try {
-    showToast('Payment successful! Processing order...', 'success');
+    showToast('💳 Payment successful! Processing order...', 'success');
     
-    // You would typically send this to your backend to verify and create order
     console.log('Payment reference:', response.reference);
     
+    // Here you would send payment confirmation to backend
+    // POST /api/orders or similar endpoint
+    
     setTimeout(() => {
-      showToast(' Purchase complete! Thank you.', 'success');
+      showToast('✅ Purchase complete! Thank you.', 'success');
       window.location.href = 'buyerPage.html';
     }, 2000);
   } catch (error) {
     console.error('Error processing payment:', error);
     showToast('Payment succeeded but order confirmation failed. Please contact support.', 'error');
+  }
+}
+
+// ==========================
+// PRODUCT MANAGEMENT (OWNER)
+// ==========================
+function editProduct(itemId) {
+  showToast('Redirecting to seller dashboard...', 'success');
+  setTimeout(() => {
+    window.location.href = 'sellerPage.html';
+  }, 1000);
+}
+
+async function deleteProduct(itemId) {
+  if (!confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
+    return;
+  }
+
+  try {
+    // DELETE /api/items/:id
+    const response = await cleanFetch(`${API_BASE_URL}/items/${itemId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete product');
+    }
+
+    showToast('✅ Product deleted successfully', 'success');
+    setTimeout(() => {
+      window.location.href = 'sellerPage.html';
+    }, 1500);
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    showToast('Failed to delete product', 'error');
   }
 }
 
@@ -468,6 +625,7 @@ async function loadRelatedProducts(category) {
     if (category) queryParams.append('category', category);
     queryParams.append('limit', '4');
 
+    // GET /api/items with filters
     const response = await cleanFetch(`${API_BASE_URL}/items?${queryParams}`);
     
     if (!response.ok) throw new Error('Failed to load related products');
@@ -478,13 +636,13 @@ async function loadRelatedProducts(category) {
     const relatedItems = items.filter(item => item.id !== parseInt(productId));
 
     if (relatedItems.length > 0) {
-      container.innerHTML = relatedItems.map(item => {
+      container.innerHTML = relatedItems.slice(0, 4).map(item => {
         const imageUrl = item.image_url 
           ? `https://bid-it-backend.onrender.com${item.image_url}` 
           : 'https://via.placeholder.com/250x200?text=Product';
 
         return `
-          <div class="product-card" onclick="window.location.href='productDetail.html?id=${item.id}'">
+          <div class="product-card" onclick="window.location.href='productDetail.html?id=${item.id}'" style="cursor: pointer;">
             <div class="product-card-image">
               <img src="${imageUrl}" alt="${item.title}" 
                    onerror="this.src='https://via.placeholder.com/250x200?text=No+Image'" />
@@ -509,6 +667,18 @@ async function loadRelatedProducts(category) {
 // UTILITY FUNCTIONS
 // ==========================
 
+function getUserIdFromToken() {
+  const token = getAuthToken();
+  if (!token) return null;
+  
+  try {
+    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+    return tokenPayload.id || tokenPayload.userId;
+  } catch (e) {
+    return null;
+  }
+}
+
 function showProductNotFound() {
   const container = document.getElementById('productContainer');
   if (!container) return;
@@ -528,7 +698,7 @@ function showProductNotFound() {
 function showLoginRequired() {
   showToast('Please login to continue', 'error');
   setTimeout(() => {
-    window.location.href = 'login.html';
+    window.location.href = `login.html?redirect=productDetail.html?id=${productId}`;
   }, 1500);
 }
 
@@ -541,7 +711,9 @@ function formatDate(dateString) {
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   });
 }
 
@@ -572,6 +744,7 @@ function showToast(message, type = 'success') {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    animation: slideIn 0.3s ease;
   `;
   
   toast.innerHTML = `
@@ -591,6 +764,9 @@ window.loadProductDetail = loadProductDetail;
 window.placeBid = placeBid;
 window.addToCart = addToCart;
 window.buyNow = buyNow;
+window.editProduct = editProduct;
+window.deleteProduct = deleteProduct;
+window.showLoginRequired = showLoginRequired;
 
 // ==========================
 // INITIALIZE ON LOAD
@@ -601,4 +777,4 @@ if (document.readyState === 'loading') {
   loadProductDetail();
 }
 
-console.log(' Product Detail JavaScript Loaded');
+console.log('✅ Product Detail JavaScript Loaded - Integrated with Backend API');
