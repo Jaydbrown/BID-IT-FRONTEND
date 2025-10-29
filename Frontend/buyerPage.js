@@ -74,7 +74,7 @@ function navigateToSell() {
     setTimeout(() => navigateToLogin(), 1500);
     return;
   }
-  window.location.href = 'sellerPage.html';
+  window.location.href = 'signup.html';
 }
 
 function navigateToCart() {
@@ -250,7 +250,7 @@ function setupNavigationLinks() {
     });
   });
 
-  document.querySelectorAll('a[href="sellerPage.html"]').forEach(link => {
+  document.querySelectorAll('a[href="signup.html"]').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       navigateToSell();
@@ -1442,3 +1442,4 @@ window.cleanFetch = cleanFetch;
 
 console.log('✅ BID IT Main JavaScript Loaded Successfully');
 console.log('📍 Current Filters:', currentFilters);
+
