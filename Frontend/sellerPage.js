@@ -539,7 +539,7 @@ openProfileBtn.onclick = async () => {
     document.getElementById("profileUsername").textContent = data.username || "N/A";
     document.getElementById("profileEmail").textContent = data.email || "N/A";
     document.getElementById("profileInstitution").textContent = data.institution || "N/A";
-    document.getElementById("profileCreatedAt").textContent = new Date(data.created_at).toLocaleDateString();
+    
 
     profileModal.style.display = "flex";
   } catch (err) {
@@ -586,3 +586,4 @@ async function testEndpoints() {
 console.log('sellerPage.js loaded');
 testEndpoints();
 loadListings();
+
